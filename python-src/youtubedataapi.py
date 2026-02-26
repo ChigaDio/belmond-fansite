@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from enum import Enum
@@ -110,10 +110,20 @@ class YoutubeVideoDetail:
     days_since_last_broadcast: int = 0
     
     thumbnail_url : str = ""
+    
+    playlist_titles: List[str] = field(default_factory=list)
 
     @property
     def url(self) -> str:
         return f"https://www.youtube.com/watch?v={self.video_id}"
+
+@dataclass
+class YoutubePlayData:
+    title: str = ""
+    playlist_id: str = ""
+    video_count: int = 0
+    published_at: Optional[datetime] = None
+    thumbnails : str = ""
 
 
 @dataclass
@@ -127,7 +137,7 @@ class YoutubeDataFind:
     MaxResults: int = 200
 
 
-def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[YoutubeVideoDetail]]:
+def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[YoutubeVideoDetail],List[YoutubePlayData]]:
     if not findData.Api:
         print("APIキーが設定されていません。")
         return []
@@ -154,7 +164,7 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
 
         if not channel_resp.get("items"):
             print("チャンネルが見つかりません")
-            return []
+            return None,[],[]
 
         subscriber_count = channel_resp['items'][0]['statistics']['subscriberCount']
         channel_title = channel_resp['items'][0]['snippet']['title']
@@ -212,7 +222,7 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                     break
 
         if not video_ids:
-            return []
+            return None,[],[]
 
         # 重複除去（稀に同じ動画が複数プレイリストに入る可能性を考慮）
         video_ids = list(dict.fromkeys(video_ids))
@@ -275,6 +285,7 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                 # カテゴリをプレイリスト由来で決定
                 category = video_to_category.get(item["id"], YoutubeContentType.UNKNOWN)
 
+
                 detail = YoutubeVideoDetail(
                     title=snip["title"],
                     video_id=item["id"],
@@ -297,6 +308,7 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                     detail.duration = detail.actual_end_time - detail.actual_start_time
 
                 videos.append(detail)
+                print(f"取得動画: {detail.title} (ID: {detail.video_id}, カテゴリ: {detail.content_category.value})")
 
         videos = [v for v in videos if v.published_at]
         videos.sort(key=lambda v: v.published_at, reverse=True)
@@ -345,11 +357,152 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                     v.days_since_last_broadcast = 0
 
         print(f"取得完了: {len(videos)} 本（全プレイリスト対象 / 祝日キャッシュ使用）")
-        return youtubeuser,videos
+        print("次はプレイリストを取得します...")
+        
+        request = youtube.playlists().list(
+        part="snippet,contentDetails,status",  # statusで公開/非公開もわかる
+        channelId=findData.ChannelId,
+        maxResults=50
+        )
+        youtubePlayList : List[YoutubePlayData] = []
+
+
+        while request:
+            response = request.execute()
+            for item in response.get("items", []):
+                # 自動生成のuploadsなどは除外（必要なら）
+                if item["id"] == uploads_normal:
+                    continue
+                if item["status"]["privacyStatus"] != "public":
+                    continue
+                published_at = None
+                if pub_str := item["snippet"].get("publishedAt"):
+                    # Z を +00:00 に統一
+                    pub_str = pub_str.replace("Z", "+00:00")
+
+                    # 重複したオフセットを削除（+00:00+00:00 → +00:00）
+                    while pub_str.endswith('+00:00+00:00'):
+                        pub_str = pub_str[:-6]  # 末尾6文字削除
+
+                    # 小数点以下があれば削除（前回のケース対応）
+                    if '.' in pub_str:
+                        parts = pub_str.split('.')
+                        pub_str = parts[0] + pub_str[-6:]  # オフセット部分だけ残す
+
+                    try:
+                        published_at = datetime.fromisoformat(pub_str).astimezone(jst)
+                    except ValueError as e:
+                        print(f"publishedAt パース失敗（スキップまたはデフォルト）: {pub_str} → {e}")
+                        # 最終フォールバック：オフセットなしで試す
+                        try:
+                            clean_str = pub_str.replace("+00:00", "")
+                            published_at = datetime.fromisoformat(clean_str).replace(tzinfo=jst)
+                        except:
+                            published_at = None  # どうしようもない場合はNone
+                
+                youtubePlayList.append(YoutubePlayData(
+                    title=item["snippet"]["title"],
+                    playlist_id=item["id"],
+                    video_count=item["contentDetails"]["itemCount"],
+                    published_at=published_at if item["snippet"].get("publishedAt") else None,
+                    thumbnails=item["snippet"]["thumbnails"]["high"]["url"] if item["snippet"].get("thumbnails") and item["snippet"]["thumbnails"].get("high") else ""
+                ))
+                print(f"取得プレイリスト: {item['snippet']['title']} (動画数: {item['contentDetails']['itemCount']})")
+            request = youtube.playlists().list_next(request, response)
+        
+
+        
+        return youtubeuser,videos,youtubePlayList
 
     except HttpError as e:
         print(f"YouTube APIエラー: {e}")
         return None,[]
     except Exception as e:
         print(f"エラー: {e}")
-        return None,[]
+        return None,[],[]
+    
+def match_videos_to_playlists(
+    videos: List[YoutubeVideoDetail],
+    playlists: List[YoutubePlayData],
+    api_key: str,                     # ← APIキーだけ渡す
+    max_results_per_playlist: int = 0,  # 0 = 無制限
+    verbose: bool = True
+) -> List[YoutubeVideoDetail]:
+    """
+    カスタム再生リストと動画をマッチング。
+    関数内でYouTube APIを再度buildして接続する。
+    """
+    if not api_key:
+        raise ValueError("APIキーがありません")
+
+    if not playlists:
+        if verbose:
+            print("カスタム再生リストが空 → スキップ")
+        return videos
+
+    if not videos:
+        if verbose:
+            print("動画リストが空 → スキップ")
+        return videos
+
+    # ここで関数内で新しくクライアントを作成
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    print("マッチング用にYouTube APIクライアントを新規作成しました")
+
+    video_to_titles = defaultdict(list)  # videoId → [タイトル, ...]
+
+    total_pl = len(playlists)
+    for idx, pl in enumerate(playlists, 1):
+        pl_id = pl.playlist_id
+        pl_title = pl.title
+        if verbose:
+            print(f"  [{idx}/{total_pl}] {pl_title} ({pl.video_count}本) 走査中...")
+
+        fetched = 0
+        page_token = None
+
+        while True:
+            try:
+                req = youtube.playlistItems().list(
+                    part="contentDetails",
+                    playlistId=pl_id,
+                    maxResults=50,
+                    pageToken=page_token
+                )
+                resp = req.execute()
+
+                for item in resp.get("items", []):
+                    if max_results_per_playlist > 0 and fetched >= max_results_per_playlist:
+                        break
+                    vid = item["contentDetails"]["videoId"]
+                    if pl_title not in video_to_titles[vid]:
+                        video_to_titles[vid].append(pl_title)
+                    fetched += 1
+
+                page_token = resp.get("nextPageToken")
+                if not page_token:
+                    break
+
+            except HttpError as e:
+                print(f"    {pl_title} でエラー: {e}")
+                break
+            except Exception as e:
+                print(f"    {pl_title} で予期せぬエラー: {e}")
+                break
+
+    # マッチング反映
+    matched = 0
+    for v in videos:
+        titles = video_to_titles.get(v.video_id, [])
+        if titles:
+            v.playlist_titles = sorted(set(titles))  # 重複除去 & ソート
+            matched += 1
+
+    if verbose:
+        print(f"\nマッチング完了: {matched} / {len(videos)} 本 がカスタム再生リストに所属")
+        if matched > 0:
+            example = next((v for v in videos if v.playlist_titles), None)
+            if example:
+                print(f"例: {example.title} → {', '.join(example.playlist_titles)}")
+
+    return videos

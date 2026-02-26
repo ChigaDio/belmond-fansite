@@ -1,4 +1,6 @@
-from youtubedataapi import YoutubeDataFind, YoutubeOrder, YoutubeVideoDetail,get_youtube_data
+from zoneinfo import ZoneInfo
+
+from youtubedataapi import Weekday, YoutubeContentType, YoutubeDataFind,YoutubeUser, YoutubeOrder, YoutubeVideoDetail,get_youtube_data,YoutubePlayData,match_videos_to_playlists
 import argparse
 from pymongo import MongoClient, UpdateOne
 from pymongo.server_api import ServerApi
@@ -15,6 +17,7 @@ class ArgsKey:
     mongo_user: str = "None"
     mongo_password: str = "None"
     db_name: str = "youtube_data"
+    is_playlist_update : bool = False
 
 def build_mongo_uri(base_uri: str, user: str, password: str) -> str:
     """mongodb+srv:// 形式のベースURIにユーザー名・パスワードを安全に挿入"""
@@ -68,18 +71,119 @@ def ensure_indexes(db):
         videos_coll.create_index("_id", unique=True)
         
         channels_coll = db["channels"]
-        channels_coll.create_index("channel_id", unique=True)
+        channels_coll.create_index("channel_id", 
+                                   unique=True)
         
         print("インデックス作成/確認完了")
     except PyMongoError as e:
         print(f"インデックス作成中にエラー（既存なら無視可）: {e}")
 
+def load_from_mongodb(
+    client: MongoClient,
+    db_name: str = "youtube_data",
+    channel_id: Optional[str] = None
+) -> tuple[List[YoutubeVideoDetail], List[YoutubePlayData],YoutubeUser]:
+    """
+    MongoDB から videos と playlists コレクションを読み込み、
+    YoutubeVideoDetail と YoutubePlayData のリストに変換して返す
+    """
+    db = client[db_name]
+    jst = ZoneInfo("Asia/Tokyo")
+
+    # 1. 動画リスト
+    videos_coll = db["videos"]
+    video_docs = videos_coll.find().sort("published_at", -1)
+
+    video_list: List[YoutubeVideoDetail] = []
+
+    for doc in video_docs:
+        # Enumはvalueから逆引き（存在しない場合はUNKNOWN）
+        content_cat = YoutubeContentType.UNKNOWN
+        content_str = YoutubeContentType(doc.get("content_category", "unknown"))
+        if content_str.name == "LIVE":
+            content_cat = YoutubeContentType.LIVE
+        elif content_str.name == "NORMAL_VIDEO":
+            content_cat = YoutubeContentType.NORMAL_VIDEO
+        elif content_str.name == "SHORTS":
+            content_cat = YoutubeContentType.SHORTS
+            
+        weekday_val = doc.get("weekday")
+        weekday = Weekday(weekday_val) if weekday_val is not None else None
+
+        video = YoutubeVideoDetail(
+            title=doc.get("title", ""),
+            video_id=doc["_id"],
+            published_at=doc.get("published_at"),
+            view_count=doc.get("view_count", 0),
+            like_count=doc.get("like_count", 0),
+            comment_count=doc.get("comment_count", 0),
+            duration_sec=doc.get("duration_sec", 0.0),
+            thumbnail_url=doc.get("thumbnail_url", ""),
+            playlist_titles=doc.get("playlist_titles", []),  # ← ここに所属再生リストが入る
+
+            # ライブ関連（NoneのままでもOK）
+            is_live_now=doc.get("is_live_now", False),
+            live_status=doc.get("live_status", "none"),
+            scheduled_start_time=doc.get("scheduled_start_time"),
+            actual_start_time=doc.get("actual_start_time"),
+            actual_end_time=doc.get("actual_end_time"),
+            concurrent_viewers=doc.get("concurrent_viewers", 0),
+
+            # 分析フィールド
+            is_holiday=doc.get("is_holiday", False),
+            weekday=weekday,
+            consecutive_broadcast_days=doc.get("consecutive_broadcast_days", 1),
+            same_day_broadcast_count=doc.get("same_day_broadcast_count", 1),
+            days_since_last_broadcast=doc.get("days_since_last_broadcast", 0),
+            was_broadcast_yesterday=doc.get("was_broadcast_yesterday", False),
+
+            # Enum
+            content_category=content_cat
+        )
+        video_list.append(video)
+
+    # 2. プレイリストリスト
+    playlists_coll = db["playlists"]
+    pl_docs = playlists_coll.find({}).sort("published_at", -1)
+
+    playlist_list: List[YoutubePlayData] = []
+
+    for doc in pl_docs:
+        pl = YoutubePlayData(
+            title=doc.get("title", ""),
+            playlist_id=doc["_id"],
+            video_count=doc.get("video_count", 0),
+            published_at=doc.get("published_at"),
+            thumbnails=doc.get("thumbnails", "")
+        )
+        playlist_list.append(pl)
+
+    print(f"動画: {len(video_list)}件、プレイリスト: {len(playlist_list)}件 読み込み完了")
+    
+    # 3. チャンネル情報（必要に応じて）
+    channel_info = None
+    if channel_id:
+            channels_coll = db["channels"]
+            channel_doc = channels_coll.find_one({"channel_id": channel_id})
+            if channel_doc:
+                channel_info = YoutubeUser(
+                    name=channel_doc.get("name", ""),
+                    followers=channel_doc.get("followers", 0)
+                )
+                print(f"チャンネル情報も読み込みました: {channel_info.name} ({channel_info.followers} subscribers)")
+            else:
+                print(f"チャンネルID {channel_id} に対応する情報が見つかりませんでした")
+
+    return video_list, playlist_list, channel_info
+    
 def save_to_mongodb(
+    
     client: MongoClient,
     channel_id: str,
     db_name: str,
     youtubeuser,
-    videos: List[YoutubeVideoDetail]
+    videos: List[YoutubeVideoDetail],
+    playList : List[YoutubePlayData]
 ):
     if not client:
         print("MongoDBクライアントが無効です。保存をスキップします")
@@ -116,32 +220,63 @@ def save_to_mongodb(
 
     for video in videos:
         # None値を適切に扱う
-        doc = {
-            "_id": video.video_id,
-            "channel_name": youtubeuser.name,
-            "title": video.title,
-            "published_at": video.published_at,
-            "view_count": video.view_count if video.view_count is not None else 0,
-            "like_count": video.like_count if video.like_count is not None else 0,
-            "comment_count": video.comment_count if video.comment_count is not None else 0,
-            "duration_sec": video.duration_sec if video.duration_sec is not None else 0.0,
-            "url": video.url,
-            "content_category": video.content_category.value if video.content_category else "unknown",
-            "is_holiday": video.is_holiday,
-            "weekday": video.weekday.value if video.weekday else None,
-            "consecutive_broadcast_days": video.consecutive_broadcast_days,
-            "same_day_broadcast_count": video.same_day_broadcast_count,
-            "days_since_last_broadcast": video.days_since_last_broadcast,
-            "was_broadcast_yesterday": video.was_broadcast_yesterday,
-            "live_status": video.live_status,
-            "is_live_now": video.is_live_now,
-            "concurrent_viewers": video.concurrent_viewers if video.concurrent_viewers is not None else 0,
-            "scheduled_start_time": video.scheduled_start_time,
-            "actual_start_time": video.actual_start_time,
-            "actual_end_time": video.actual_end_time,
-            "thumbnail_url": video.thumbnail_url,
-            "last_updated": datetime.now()
-        }
+        doc = None
+        if len(video.playlist_titles) == 0:
+            doc = {
+                "_id": video.video_id,
+                "channel_name": youtubeuser.name,
+                "title": video.title,
+                "published_at": video.published_at,
+                "view_count": video.view_count if video.view_count is not None else 0,
+                "like_count": video.like_count if video.like_count is not None else 0,
+                "comment_count": video.comment_count if video.comment_count is not None else 0,
+                "duration_sec": video.duration_sec if video.duration_sec is not None else 0.0,
+                "url": video.url,
+                "content_category": video.content_category.value if video.content_category else "unknown",
+                "is_holiday": video.is_holiday,
+                "weekday": video.weekday.value if video.weekday else None,
+                "consecutive_broadcast_days": video.consecutive_broadcast_days,
+                "same_day_broadcast_count": video.same_day_broadcast_count,
+                "days_since_last_broadcast": video.days_since_last_broadcast,
+                "was_broadcast_yesterday": video.was_broadcast_yesterday,
+                "live_status": video.live_status,
+                "is_live_now": video.is_live_now,
+                "concurrent_viewers": video.concurrent_viewers if video.concurrent_viewers is not None else 0,
+                "scheduled_start_time": video.scheduled_start_time,
+                "actual_start_time": video.actual_start_time,
+                "actual_end_time": video.actual_end_time,
+                "thumbnail_url": video.thumbnail_url,
+                "last_updated": datetime.now(),
+            }
+        else:
+            doc = {
+                "_id": video.video_id,
+                "channel_name": youtubeuser.name,
+                "title": video.title,
+                "published_at": video.published_at,
+                "view_count": video.view_count if video.view_count is not None else 0,
+                "like_count": video.like_count if video.like_count is not None else 0,
+                "comment_count": video.comment_count if video.comment_count is not None else 0,
+                "duration_sec": video.duration_sec if video.duration_sec is not None else 0.0,
+                "url": video.url,
+                "content_category": video.content_category.value if video.content_category else "unknown",
+                "is_holiday": video.is_holiday,
+                "weekday": video.weekday.value if video.weekday else None,
+                "consecutive_broadcast_days": video.consecutive_broadcast_days,
+                "same_day_broadcast_count": video.same_day_broadcast_count,
+                "days_since_last_broadcast": video.days_since_last_broadcast,
+                "was_broadcast_yesterday": video.was_broadcast_yesterday,
+                "live_status": video.live_status,
+                "is_live_now": video.is_live_now,
+                "concurrent_viewers": video.concurrent_viewers if video.concurrent_viewers is not None else 0,
+                "scheduled_start_time": video.scheduled_start_time,
+                "actual_start_time": video.actual_start_time,
+                "actual_end_time": video.actual_end_time,
+                "thumbnail_url": video.thumbnail_url,
+                "playlist_titles": video.playlist_titles,  # ← 所属再生リストも保存
+                "last_updated": datetime.now(),
+                
+            }
 
         operations.append(
             UpdateOne(
@@ -163,6 +298,36 @@ def save_to_mongodb(
             traceback.print_exc()
     else:
         print("保存する動画がありません")
+    
+    videos_coll = db["playlists"]
+    operations = []
+    for playlist in playList:
+        doc = {
+            "_id": playlist.playlist_id,
+            "title": playlist.title,
+            "video_count": playlist.video_count,
+            "published_at": playlist.published_at,
+            "thumbnails": playlist.thumbnails,
+            "last_updated": datetime.now()
+        }
+        operations.append(
+            UpdateOne(
+                {"_id": playlist.playlist_id},
+                {"$set": doc},
+                upsert=True
+            )
+        )
+    if operations:
+        try:
+            result = videos_coll.bulk_write(operations, ordered=False)
+            print(f"プレイリスト保存結果:")
+            print(f"  - 挿入（新規）   : {result.upserted_count} 件")
+            print(f"  - 更新（既存）   : {result.modified_count} 件")
+        except PyMongoError as e:
+            print(f"Bulk write エラー: {e}")
+            traceback.print_exc()
+    else:
+        print("保存するプレイリストがありません")
 
 def main():
     
@@ -179,6 +344,7 @@ def main():
     parser.add_argument("--mongo_password", "-mup", type=str, required=True, help="MongoDBのパスワード")
     
     parser.add_argument("--db_name", "-dbn", type=str, default="youtube_data", help="使用するデータベース名（デフォルト: youtube_data）")
+    parser.add_argument("--is_playlist_update", "-plu", action="store_true",default=False,help="プレイリスト情報も更新する場合はこのフラグを付ける")
 
     args = parser.parse_args()
 
@@ -200,16 +366,33 @@ def main():
         ChannelId=args.channel_id,
         MaxResults=0  # 0 = 制限なし（全部取得）
     )
+    
+    if args.is_playlist_update:
+        print("\nプレイリストの更新を開始します...")
+        result = load_from_mongodb(client, args.db_name, args.channel_id) 
+        if result is None or not isinstance(result, tuple) or len(result) != 3:
+            print("プレイリストの読み込みに失敗しました")
+            return
+        else:
+            youtube_list, playlists_from_db, channel_info = result
+            update_data = match_videos_to_playlists(youtube_list, playlists_from_db,args.api_key,0)
+            
+            print(f"MongoDBから読み込んだプレイリスト数: {len(playlists_from_db)} 件")
+            save_to_mongodb(client, args.channel_id, args.db_name, channel_info, update_data,[])  # チャンネル情報と動画は更新しないのでNoneと空リストを渡す
+            
+            print("\nプレイリストの更新も完了しました")
+            return
+
 
     result = get_youtube_data(find)
     
-    if result is None or not isinstance(result, tuple) or len(result) != 2:
+    if result is None or not isinstance(result, tuple) or len(result) != 3:
         print("YouTube データ取得に失敗しました")
         client.close()
         return
     
 
-    youtubeuser, videos = result
+    youtubeuser, videos, playList = result
     
     if youtubeuser is None:
         print("チャンネル情報が取得できませんでした（channel_idを確認）")
@@ -224,8 +407,8 @@ def main():
     print(f"\n取得完了: {len(videos)} 本の動画データ")
 
     # MongoDB に保存
-    save_to_mongodb(client, args.channel_id, args.db_name, youtubeuser, videos)
-
+    save_to_mongodb(client, args.channel_id, args.db_name, youtubeuser, videos, playList)
+    
     client.close()
     print("\nすべての処理が完了しました")
 
