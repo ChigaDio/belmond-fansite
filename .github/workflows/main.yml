@@ -15,7 +15,7 @@ on:
         default: 'belmond_fan_data'
         type: string
   schedule:
-   - cron : '45 * * * *'  
+   - cron : '*/45 * * * *'  
 
   # 必要に応じてpush時も（テスト用）
   # push:
