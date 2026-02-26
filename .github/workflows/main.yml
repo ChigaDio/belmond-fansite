@@ -14,10 +14,8 @@ on:
         required: false
         default: 'belmond_fan_data'
         type: string
-
-  # スケジュール実行（例: 毎日朝9時 JST）
   schedule:
-    - cron: '0 0 * * *'   # UTC 0時 = JST 9時
+   - cron : '45 * * * *'  
 
   # 必要に応じてpush時も（テスト用）
   # push:
