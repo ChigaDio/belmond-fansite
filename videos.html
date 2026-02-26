@@ -32,7 +32,6 @@
         }
 
         /* ==================== ヘッダー（完全復元） ==================== */
-        /* --- Header (共通) --- */
         header {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             background: rgba(104, 61, 70, 0.88);
@@ -315,6 +314,39 @@
             height: 100%;
         }
 
+        /* タグ入力用の追加スタイル */
+        .tag-container {
+            min-height: 38px;
+            padding: 0.4rem 0.8rem;
+            background: #3a252e;
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .tag-container:focus-within {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+        .search-tag {
+            background: var(--light-accent);
+            color: var(--bg-dark);
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.94rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            white-space: nowrap;
+        }
+        .search-tag span {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
         @media (max-width: 1200px) {
             .video-grid { grid-template-columns: repeat(3, minmax(300px, 1fr)); }
         }
@@ -325,7 +357,7 @@
             .video-grid { grid-template-columns: 1fr; }
             .controls { flex-direction: column; align-items: stretch; }
         }
-                @media (max-width: 768px) {
+        @media (max-width: 768px) {
             .SectionTitle { font-size: 2.2rem; }
             .inner { padding: 0 1rem; }
             .Menu ul { gap: 1rem; }
@@ -367,8 +399,21 @@
 
         <!-- コントロール -->
         <div class="controls">
-            <input type="text" id="searchInput" placeholder="タイトルで検索（部分一致）">
-            
+
+            <!-- タグ入力検索エリア -->
+            <div style="position:relative; flex:1; min-width:320px;">
+                <div id="searchTags" class="tag-container">
+                    <input type="text" id="searchInput" placeholder="タイトル検索（スペースで複数AND）" 
+                           style="flex:1; min-width:180px; background:transparent; border:none; color:white; font-size:1.02rem; outline:none;">
+                </div>
+            </div>
+
+            <!-- プレイリスト複数選択 -->
+            <select id="playlistFilter" multiple size="4"
+                    style="padding:0.6rem; background:#3a252e; border:none; border-radius:10px; color:white; min-width:240px; max-height:140px; overflow-y:auto;">
+                <option value="" disabled selected>プレイリストで絞り込み（複数選択可）</option>
+            </select>
+
             <input type="date" id="startDate">
             <span style="color:#aaa; font-size:1.1rem;">〜</span>
             <input type="date" id="endDate">
@@ -412,11 +457,13 @@
 
 <script>
 let currentPage = 1;
-let currentSearch = '';
+let currentSearchTags = [];
+let currentPlaylists = [];
 let currentStartDate = '';
 let currentEndDate = '';
 let currentType = '';
 let currentSort = 'published_at,-1';
+let playlistData = [];
 
 // ヘッダー
 window.addEventListener('scroll', () => {
@@ -436,7 +483,7 @@ function countUp(element, target, duration = 2800) {
     }, stepTime);
 }
 
-// 登録者数（userDetailsApiに変更）
+// 登録者数
 async function loadFollowerCount() {
     try {
         const response = await fetch('https://belmond-fansite.vercel.app/api/userApi');
@@ -454,13 +501,118 @@ async function loadFollowerCount() {
     }
 }
 
-// 動画読み込み（全フィルタ対応）
+// プレイリスト読み込み
+async function loadPlaylists() {
+    try {
+        const res = await fetch('https://belmond-fansite.vercel.app/api/playlistApi');
+        if (!res.ok) throw new Error();
+        playlistData = await res.json();
+
+        const select = document.getElementById('playlistFilter');
+        playlistData.forEach(pl => {
+            const opt = document.createElement('option');
+            opt.value = pl._id;
+            opt.textContent = `${pl.title} (${pl.video_count}本)`;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("プレイリスト取得エラー", err);
+    }
+}
+
+// タグ操作
+const searchInput = document.getElementById('searchInput');
+const tagContainer = document.getElementById('searchTags');
+
+searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+        e.preventDefault();
+        const val = searchInput.value.trim();
+        if (val) {
+            if (!currentSearchTags.includes(val)) {
+                currentSearchTags.push(val);
+                renderTags();
+            }
+            searchInput.value = '';
+        }
+    } else if (e.key === 'Backspace' && searchInput.value === '' && currentSearchTags.length > 0) {
+        currentSearchTags.pop();
+        renderTags();
+    }
+});
+
+function renderTags() {
+    const existingTags = tagContainer.querySelectorAll('.search-tag');
+    existingTags.forEach(t => t.remove());
+
+    currentSearchTags.forEach((text, idx) => {
+        const tag = document.createElement('div');
+        tag.className = 'search-tag';
+        tag.innerHTML = `
+            ${text}
+            <span onclick="removeTag(${idx})">×</span>
+        `;
+        tagContainer.insertBefore(tag, searchInput);
+    });
+}
+
+window.removeTag = function(idx) {
+    currentSearchTags.splice(idx, 1);
+    renderTags();
+};
+
+// 選択中のプレイリスト
+function getSelectedPlaylists() {
+    const sel = document.getElementById('playlistFilter');
+    return Array.from(sel.selectedOptions)
+        .filter(o => o.value)
+        .map(o => o.value);
+}
+
+// フィルタ適用
+function applyFilters() {
+    currentSearchTags = currentSearchTags.filter(t => t.trim());
+    currentPlaylists = getSelectedPlaylists();
+    currentStartDate = document.getElementById('startDate').value;
+    currentEndDate = document.getElementById('endDate').value;
+    currentType   = document.getElementById('typeFilter').value;
+    currentSort   = document.getElementById('sortSelect').value;
+    loadVideos(1);
+}
+
+function resetFilters() {
+    currentSearchTags = [];
+    renderTags();
+    searchInput.value = '';
+
+    const pl = document.getElementById('playlistFilter');
+    Array.from(pl.options).forEach(o => o.selected = false);
+
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('sortSelect').value = 'published_at,-1';
+
+    currentPlaylists = [];
+    currentStartDate = '';
+    currentEndDate = '';
+    currentType = '';
+    currentSort = 'published_at,-1';
+    loadVideos(1);
+}
+
+// 動画読み込み
 async function loadVideos(page = 1) {
     currentPage = page;
     const url = new URL('https://belmond-fansite.vercel.app/api/videosDetailsApi');
     
     url.searchParams.set('page', page);
-    if (currentSearch) url.searchParams.set('search', currentSearch);
+    if (currentSearchTags.length) {
+        url.searchParams.set('search', currentSearchTags.join(','));
+    }
+    if (currentPlaylists.length) {
+        url.searchParams.set('playlists', currentPlaylists.join(','));
+    }
     if (currentStartDate) url.searchParams.set('startDate', currentStartDate);
     if (currentEndDate) url.searchParams.set('endDate', currentEndDate);
     if (currentType) url.searchParams.set('type', currentType);
@@ -471,11 +623,12 @@ async function loadVideos(page = 1) {
 
     try {
         const res = await fetch(url);
+        if (!res.ok) throw new Error();
         const data = await res.json();
 
-        // カード描画
         const grid = document.getElementById('videoGrid');
         grid.innerHTML = '';
+
         data.videos.forEach(video => {
             const date = new Date(video.published_at || video.actual_end_time || video.scheduled_start_time);
             const card = document.createElement('div');
@@ -506,7 +659,7 @@ async function loadVideos(page = 1) {
     }
 }
 
-// スマートページネーション（1,2,… ,5,6,7,8,9,… ,最大）
+// スマートページネーション
 function renderSmartPagination(current, total) {
     const container = document.getElementById('pagination');
     container.innerHTML = '';
@@ -549,31 +702,6 @@ function renderSmartPagination(current, total) {
     });
 }
 
-// フィルタ適用
-function applyFilters() {
-    currentSearch = document.getElementById('searchInput').value.trim();
-    currentStartDate = document.getElementById('startDate').value;
-    currentEndDate = document.getElementById('endDate').value;
-    currentType = document.getElementById('typeFilter').value;
-    currentSort = document.getElementById('sortSelect').value;
-    loadVideos(1);
-}
-
-function resetFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('typeFilter').value = '';
-    document.getElementById('sortSelect').value = 'published_at,-1';
-    
-    currentSearch = '';
-    currentStartDate = '';
-    currentEndDate = '';
-    currentType = '';
-    currentSort = 'published_at,-1';
-    loadVideos(1);
-}
-
 // モーダル
 function openVideoModal(videoId, title) {
     const container = document.getElementById('playerContainer');
@@ -593,6 +721,7 @@ document.getElementById('closeModal').addEventListener('click', () => {
 // 初期化
 window.addEventListener('load', () => {
     loadFollowerCount();
+    loadPlaylists();
     loadVideos(1);
 });
 </script>

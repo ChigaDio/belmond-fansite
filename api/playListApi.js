@@ -18,9 +18,9 @@ export default async function handler(req, res) {
     // コレクション名「channels」を指定
     const collection = database.collection('playlists');
     
-    const data = await collection.findOne({});
+    const data = await collection.find({}).toArray();
 
-    if (!data) {
+    if (!data || data.length === 0) {
       // もしここでも出ない場合は、channelsという名前が合っているか再確認
       return res.status(404).json({ 
         error: 'データが見つかりませんでした',
