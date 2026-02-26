@@ -51,9 +51,9 @@ export default async function handler(req, res) {
 
     // プレイリスト絞り込み（複数）
     if (playlists) {
-      const playlistIds = playlists.split(',').map(id => id.trim()).filter(Boolean);
-      if (playlistIds.length > 0) {
-        filter.playlist_titles = { $in: playlistIds };
+      const playlistTitles = playlists.split(',').map(t => decodeURIComponent(t.trim())).filter(Boolean);
+      if (playlistTitles.length > 0) {
+        filter.playlist_titles = { $in: playlistTitles };
       }
     }
 

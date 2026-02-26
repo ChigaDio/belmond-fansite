@@ -644,7 +644,7 @@ async function loadPlaylists() {
 
             item.innerHTML = `
                 <label class="custom-checkbox">
-                    <input type="checkbox" value="${pl._id}">
+                    <input type="checkbox" value="${pl.title}">
                     <span class="checkmark"></span>
                 </label>
                 <span class="playlist-label">${pl.title} (${pl.video_count}本) - ${dateStr}</span>
