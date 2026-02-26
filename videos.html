@@ -506,7 +506,7 @@ async function loadFollowerCount() {
 // 動画読み込み（全フィルタ対応）
 async function loadVideos(page = 1) {
     currentPage = page;
-    const url = new URL('https://belmond-fansite.vercel.app/api/videoDetailsApi');
+    const url = new URL('https://belmond-fansite.vercel.app/api/videosDetailsApi');
     
     url.searchParams.set('page', page);
     if (currentSearch) url.searchParams.set('search', currentSearch);
