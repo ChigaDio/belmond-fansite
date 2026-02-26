@@ -1,0 +1,77 @@
+name: YouTube → MongoDB Atlas 同期
+
+on:
+  # 手動実行（UIからボタンで起動可能）
+  workflow_dispatch:
+    inputs:
+      channel_id:
+        description: '同期したいYouTubeチャンネルID'
+        required: false
+        default: 'UCbc8fwhdUNlqi-J99ISYu4A'
+        type: string
+      db_name:
+        description: 'MongoDBデータベース名'
+        required: false
+        default: 'belmond_fan_data'
+        type: string
+  schedule:
+   - cron : '0 */6 * * *'  
+
+  # 必要に応じてpush時も（テスト用）
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: YoutuDataDB
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'   # あなたのPythonバージョンに合わせる
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pymongo[srv] requests pandas isodate google-api-python-client
+
+      - name: Run sync script
+        env:
+          YOUTUBE_API_KEY:     ${{ secrets.YOUTUBE_API_KEY }}
+          MONGO_USER:          ${{ secrets.MONGO_USER }}
+          MONGO_PASSWORD:      ${{ secrets.MONGO_PASSWORD }}
+          MONGO_BASE_URI:      ${{ secrets.MONGO_BASE_URI }}
+          CHANNEL_ID:          ${{ inputs.channel_id || secrets.CHANNEL_ID }}
+          DB_NAME:             ${{ inputs.db_name || secrets.DB_NAME }}
+        run: |
+          # デバッグ用に出力（Actionsログで確認できる）
+          echo "MONGO_BASE_URI raw: '${MONGO_BASE_URI}'"
+          echo "Length: ${#MONGO_BASE_URI}"
+          echo "Starts with mongodb+srv:// ? $( [[ $MONGO_BASE_URI == mongodb+srv://* ]] && echo yes || echo no )"
+
+          cd python-src
+          ls -la
+          
+          # 強制的にtrim
+          MONGO_BASE_URI_CLEAN="${MONGO_BASE_URI#"${MONGO_BASE_URI%%[![:space:]]*}"}"
+          MONGO_BASE_URI_CLEAN="${MONGO_BASE_URI_CLEAN%"${MONGO_BASE_URI_CLEAN##*[![:space:]]}"}"
+          
+          echo "Cleaned: '$MONGO_BASE_URI_CLEAN'"
+          
+          python main.py \
+            --api_key "${YOUTUBE_API_KEY}" \
+            --channel_id "${CHANNEL_ID}" \
+            --mongo_base_uri "${MONGO_BASE_URI_CLEAN}" \
+            --mongo_user "${MONGO_USER}" \
+            --mongo_password "${MONGO_PASSWORD}" \
+            --db_name "${DB_NAME}" \
+            --is_playlist_update
+
+      - name: Notify on failure (optional)
+        if: failure()
+        run: echo "同期に失敗しました。ログを確認してください。"
