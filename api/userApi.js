@@ -1,10 +1,8 @@
 import { MongoClient } from 'mongodb';
 
-const user = process.env.DB_USER;
-const password = process.env.DB_PASSWORD;
 const dbName = process.env.DB;
 
-const uri = `mongodb+srv://${user}:${password}@belmondfansitedb.vxxqgmv.mongodb.net/${dbName}?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://read_fan:TmuFabTirtIueBxB@belmondfansitedb.vxxqgmv.mongodb.net/`;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
