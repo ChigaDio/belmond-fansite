@@ -1,0 +1,7 @@
+node_modules
+python-src
+.github
+package.json
+bun.lockb
+api
+javascript-src
