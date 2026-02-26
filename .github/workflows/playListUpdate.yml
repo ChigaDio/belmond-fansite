@@ -1,4 +1,4 @@
-name: YouTube → MongoDB Atlas 同期
+name: PlayListの更新
 
 on:
   # 手動実行（UIからボタンで起動可能）
