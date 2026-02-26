@@ -26,6 +26,7 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    environment: YoutuDataDB
 
     steps:
       - name: Checkout repository
