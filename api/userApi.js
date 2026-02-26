@@ -1,9 +1,7 @@
 import { MongoClient } from 'mongodb';
 
 const dbName = process.env.DB;
-
-const uri = `mongodb+srv://read_fan:TmuFabTirtIueBxB@belmondfansitedb.vxxqgmv.mongodb.net/`;
-const client = new MongoClient(uri);
+const client = new MongoClient(dbName);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
