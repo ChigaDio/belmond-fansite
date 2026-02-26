@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belmond Fansite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Opti:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #683D46;
+            --primary-dark: #4A2B32;
+            --accent: #A8758A;
+            --light-accent: #C9A8B5;
+            --bg-dark: #140B0F;
+            --bg-mid: #25161C;
+            --text-main: #F0E8FF;
+            --text-sub: #D4C8D0;
+            --shadow: rgba(104, 61, 70, 0.45);
+        }
+
+        body {
+            font-family: "Kaisei Opti", serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* ヘッダー全体を固定 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(104, 61, 70, 0.88);          /* #683D46 半透明 */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(201, 168, 181, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled {
+            padding: 0.6rem 0;
+            background: rgba(74, 43, 50, 0.94);
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .site-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--light-accent);
+            text-shadow: 0 2px 10px var(--shadow);
+            letter-spacing: 1px;
+        }
+
+        .Menu {
+            margin: 0;
+        }
+
+        .Menu ul {
+            list-style: none;
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .Menu li a {
+            text-decoration: none;
+            color: var(--text-sub);
+            font-size: 1.15rem;
+            font-weight: 500;
+            padding: 0.5rem 0.3rem;
+            position: relative;
+            transition: all 0.28s ease;
+        }
+
+        .Menu li a::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            background: var(--accent);                    /* #A8758A */
+            transition: all 0.35s ease;
+            transform: translateX(-50%);
+        }
+
+        .Menu li a:hover::after,
+        .Menu li a.active::after {
+            width: 80%;
+        }
+
+        .Menu li a:hover,
+        .Menu li a.active {
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(168, 117, 138, 0.7);
+        }
+
+        main {
+            padding-top: 100px;
+        }
+
+        .CharacterBox {            
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-color: var(--bg-mid);
+            overflow: hidden;
+        }
+
+        .CharacterBox::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(0deg, var(--primary) 0%, transparent 60%);
+            z-index: 2;
+        }
+
+        .CharacterBackground {
+            position: absolute;
+            right: 0;
+            top: 170%;
+            transform: translateY(-50%) scale(3.5);
+            height: 100%;
+            width: auto;
+            z-index: 1;
+            object-fit: contain;
+        }
+
+        .TitleText {
+            position: absolute;
+            top: 50%;
+            left: 48%;
+            transform: translate(-100%, -50%);
+            font-family: "Kaisei Opti";
+            color: white;
+            z-index: 3;
+            font-size: 5.5rem;
+            font-weight: 700;
+            text-shadow: 0 4px 30px var(--shadow);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="inner">
+        <div class="site-title">Belmond</div>
+        
+        <nav class="Menu">
+            <ul>
+                <li><a href="./index.html" class="active">Index</a></li>
+                <li><a href="./videos.html">Video</a></li>
+                <li><a href="./about.html">About</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="CharacterBox">
+        <p class="TitleText">おバンです</p>
+        <img class="CharacterBackground" src="./assets/Background.png" alt="Belmond">
+    </div>
+
+    <div style="height: 150vh; padding: 3rem; font-size: 1.3rem; color: var(--text-sub);">
+        <p>このサイトは、にじさんじ所属のVTuber「ベルモンド・バンデラス」さんのファンサイトです。</p>
+       
+    </div>
+</main>
+
+<script>
+window.addEventListener('scroll', () => {
+    const header = document.querySelector('header');
+    if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
+    }
+});
+</script>
+
+</body>
+</html>
