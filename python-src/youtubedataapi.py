@@ -108,6 +108,8 @@ class YoutubeVideoDetail:
     consecutive_broadcast_days: int = 1
     same_day_broadcast_count: int = 1
     days_since_last_broadcast: int = 0
+    
+    thumbnail_url : str = ""
 
     @property
     def url(self) -> str:
@@ -258,6 +260,15 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                 if "actualEndTime" in live:
                     act_end = datetime.fromisoformat(live["actualEndTime"].replace("Z", "+00:00")).astimezone(jst)
                     published_at = act_end
+                    
+                thumbnails = snip.get("thumbnails", {})
+                thumbnail_url = None
+
+                # 優先順位をつけて選ぶ（おすすめはこの順番）
+                for quality in ["maxres", "high", "standard", "medium", "default"]:
+                    if quality in thumbnails:
+                        thumbnail_url = thumbnails[quality]["url"]
+                        break
 
                 
 
@@ -279,6 +290,7 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                     concurrent_viewers=int(live["concurrentViewers"]) if live.get("concurrentViewers") else None,
                     duration_sec=duration_sec,
                     content_category=category,   # ← ここでEnumを設定
+                    thumbnail_url=thumbnail_url
                 )
 
                 if detail.actual_start_time and detail.actual_end_time:

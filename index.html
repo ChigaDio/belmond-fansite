@@ -30,14 +30,14 @@
             color: var(--text-main);
             min-height: 100vh;
         }
-        /* ヘッダー全体を固定 */
+
         header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             z-index: 1000;
-            background: rgba(104, 61, 70, 0.88);          /* #683D46 半透明 */
+            background: rgba(104, 61, 70, 0.88);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(201, 168, 181, 0.15);
@@ -88,7 +88,7 @@
             height: 2px;
             bottom: -4px;
             left: 50%;
-            background: var(--accent);                    /* #A8758A */
+            background: var(--accent);
             transition: all 0.35s ease;
             transform: translateX(-50%);
         }
@@ -101,10 +101,12 @@
             color: #ffffff;
             text-shadow: 0 0 12px rgba(168, 117, 138, 0.7);
         }
+
         main {
             padding-top: 100px;
         }
-        .CharacterBox {            
+
+        .CharacterBox {
             position: relative;
             width: 100%;
             height: 400px;
@@ -143,9 +145,8 @@
             font-weight: 700;
             text-shadow: 0 4px 30px var(--shadow);
             letter-spacing: 2px;
-                                }
+        }
 
-        /* 登録者数表示（CharacterBox内に配置） */
         .follower-wrap {
             position: absolute;
             bottom: 15%;
@@ -182,13 +183,155 @@
             color: rgba(255,255,255,0.8);
             margin-top: 0.5rem;
         }
+
+        /* 動画カルーセル */
+        .VideoSection {
+            max-width: 100%;
+            margin: 4rem 0 6rem;
+            padding: 0 1rem;
+        }
+        .VideoSection h2 {
+            font-size: 2.8rem;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            color: var(--light-accent);
+            text-shadow: 0 2px 12px var(--shadow);
+        }
+        .ticker-wrapper {
+            overflow: hidden;
+            width: 100%;
+            position: relative;
+        }
+        .ticker {
+            display: flex;
+            flex-wrap: nowrap;
+            animation: scroll-left 120s linear infinite;
+            will-change: transform;
+        }
+        .ticker:hover {
+            animation-play-state: paused;
+        }
+        .video-card {
+            flex: 0 0 360px;
+            margin-right: 2rem;
+            background: var(--bg-mid);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px var(--shadow);
+            transition: all 0.35s ease;
+            cursor: pointer;
+        }
+        .ticker:hover .video-card {
+            transform: scale(1.05);
+        }
+        .video-card:hover {
+            transform: scale(1.09);
+            box-shadow: 0 16px 40px rgba(104, 61, 70, 0.6);
+        }
+        .thumbnail-wrapper {
+            position: relative;
+            padding-top: 56.25%;
+            overflow: hidden;
+            background: #000;
+        }
+        .thumbnail {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .video-card:hover .thumbnail {
+            transform: scale(1.15);
+        }
+        .video-info {
+            padding: 1.3rem 1.5rem;
+        }
+        .video-title {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            margin-bottom: 0.9rem;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .video-meta {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+        }
+        .video-meta span {
+            background: rgba(168, 117, 138, 0.18);
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* モーダル */
+        #videoModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(168,117,138,0.4);
+        }
+        .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 2.2rem;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            text-shadow: 0 0 8px black;
+        }
+        .video-player {
+            position: relative;
+            padding-top: 56.25%;
+        }
+        .video-player iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .video-card { flex: 0 0 320px; margin-right: 1.6rem; }
+        }
+        @media (max-width: 768px) {
+            .TitleText { font-size: 4rem; }
+            .follower-count { font-size: 3.4rem; }
+            .video-card { flex: 0 0 280px; margin-right: 1.4rem; }
+            .VideoSection h2 { font-size: 2.2rem; }
+        }
     </style>
 </head>
 <body>
 <header>
     <div class="inner">
         <div class="site-title">Belmond</div>
-       
         <nav class="Menu">
             <ul>
                 <li><a href="./index.html" class="active">Index</a></li>
@@ -198,11 +341,11 @@
         </nav>
     </div>
 </header>
+
 <main>
     <div class="CharacterBox">
         <p class="TitleText">おバンです</p>
 
-        <!-- 登録者数をここに配置 -->
         <div class="follower-wrap">
             <div class="follower-label">チャンネル登録者数</div>
             <div>
@@ -215,24 +358,37 @@
         <img class="CharacterBackground" src="./assets/Background.png" alt="Belmond">
     </div>
 
-    <div style="height: 150vh; padding: 3rem; font-size: 1.3rem; color: var(--text-sub);">
+    <section class="VideoSection">
+        <h2>ベルモンド・バンデラスの最新配信・アーカイブ</h2>
+        
+        <div class="ticker-wrapper">
+            <div class="ticker" id="videoTicker">
+                <!-- JavaScriptで全動画を2セット挿入 -->
+            </div>
+        </div>
+    </section>
+
+    <div style="height: 80vh; padding: 3rem; font-size: 1.3rem; color: var(--text-sub); text-align: center;">
         <p>このサイトは、にじさんじ所属のVTuber「ベルモンド・バンデラス」さんのファンサイトです。</p>
         <br>
-        <p>
+        <p>ゆっくりスクロールしながら最新動画をチェックしてくださいね🥃</p>
     </div>
 </main>
+
+<!-- 動画再生モーダル -->
+<div id="videoModal">
+    <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <div class="video-player" id="playerContainer"></div>
+    </div>
+</div>
 
 <script>
 window.addEventListener('scroll', () => {
     const header = document.querySelector('header');
-    if (window.scrollY > 50) {
-        header.classList.add('scrolled');
-    } else {
-        header.classList.remove('scrolled');
-    }
+    header.classList.toggle('scrolled', window.scrollY > 50);
 });
 
-// カウントアップアニメーション
 function countUp(element, target, duration = 2800) {
     let start = 0;
     const stepTime = 35;
@@ -249,28 +405,23 @@ function countUp(element, target, duration = 2800) {
     }, stepTime);
 }
 
-// APIからフォロワー数を取得
 async function loadFollowerCount() {
     try {
         const response = await fetch('https://belmond-fansite.vercel.app/api/userApi');
         if (!response.ok) throw new Error('APIエラー');
-
         const data = await response.json();
 
-        const countElement   = document.getElementById('followerCount');
+        const countElement = document.getElementById('followerCount');
         const updatedElement = document.getElementById('lastUpdated');
 
-        // 0からアニメーションでカウントアップ
         countUp(countElement, Number(data.followers));
 
-        // 更新日時を整形
         const date = new Date(data.last_updated);
         const formatted = date.toLocaleString('ja-JP', {
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit'
         });
         updatedElement.textContent = `最終更新：${formatted}`;
-
     } catch (err) {
         console.error(err);
         document.getElementById('followerCount').textContent = '—';
@@ -278,8 +429,99 @@ async function loadFollowerCount() {
     }
 }
 
-// ページ読み込み時に実行
-window.addEventListener('load', loadFollowerCount);
+async function loadVideos() {
+    try {
+        const response = await fetch('https://belmond-fansite.vercel.app/api/videosApi');
+        if (!response.ok) throw new Error('動画APIエラー');
+        const data = await response.json();
+
+        const ticker = document.getElementById('videoTicker');
+        ticker.innerHTML = '';
+
+        const createCard = (video) => {
+            const date = new Date(video.published_at || video.actual_end_time || video.scheduled_start_time);
+            const dateStr = date.toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.dataset.videoId = video._id;
+
+            card.innerHTML = `
+                <div class="thumbnail-wrapper">
+                    <img class="thumbnail" 
+                         src="${video.thumbnail_url || `https://i.ytimg.com/vi/${video._id}/maxresdefault.jpg`}" 
+                         alt="${video.title.replace(/"/g, '&quot;')}" 
+                         loading="lazy">
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${video.title}</h3>
+                    <div class="video-meta">
+                        <span>👀 ${video.view_count.toLocaleString()} 回</span>
+                        <span>❤️ ${video.like_count.toLocaleString()}</span>
+                        <span>💬 ${video.comment_count}</span>
+                        <span>${dateStr}</span>
+                        <span>${video.content_category.toUpperCase()}</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => openVideoModal(video._id, video.title));
+            return card;
+        };
+
+        // 1セット目
+        data.videos.forEach(video => ticker.appendChild(createCard(video)));
+        // 2セット目（ループ用）
+        data.videos.forEach(video => ticker.appendChild(createCard(video)));
+
+        // 動画が極端に少ない場合の保険
+        if (data.videos.length < 4) {
+            data.videos.forEach(video => ticker.appendChild(createCard(video)));
+        }
+    } catch (err) {
+        console.error(err);
+        document.getElementById('videoTicker').innerHTML = 
+            '<p style="text-align:center; padding:6rem 1rem; font-size:1.5rem; color:var(--text-sub);">動画の読み込みに失敗しました…</p>';
+    }
+}
+
+function openVideoModal(videoId, title) {
+    const modal = document.getElementById('videoModal');
+    const container = document.getElementById('playerContainer');
+
+    container.innerHTML = `
+        <iframe 
+            src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
+            title="${title.replace(/"/g, '&quot;')}" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+        </iframe>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closeVideoModal() {
+    const modal = document.getElementById('videoModal');
+    const container = document.getElementById('playerContainer');
+    container.innerHTML = '';
+    modal.style.display = 'none';
+}
+
+document.getElementById('closeModal').addEventListener('click', closeVideoModal);
+document.getElementById('videoModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('videoModal')) closeVideoModal();
+});
+
+window.addEventListener('load', () => {
+    loadFollowerCount();
+    loadVideos();
+});
 </script>
 </body>
 </html>

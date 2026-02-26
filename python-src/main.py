@@ -139,6 +139,7 @@ def save_to_mongodb(
             "scheduled_start_time": video.scheduled_start_time,
             "actual_start_time": video.actual_start_time,
             "actual_end_time": video.actual_end_time,
+            "thumbnail_url": video.thumbnail_url,
             "last_updated": datetime.now()
         }
 
