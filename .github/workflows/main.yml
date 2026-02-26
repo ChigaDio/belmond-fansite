@@ -54,6 +54,9 @@ jobs:
           echo "MONGO_BASE_URI raw: '${MONGO_BASE_URI}'"
           echo "Length: ${#MONGO_BASE_URI}"
           echo "Starts with mongodb+srv:// ? $( [[ $MONGO_BASE_URI == mongodb+srv://* ]] && echo yes || echo no )"
+
+          cd python-src
+          ls -la
           
           # 強制的にtrim
           MONGO_BASE_URI_CLEAN="${MONGO_BASE_URI#"${MONGO_BASE_URI%%[![:space:]]*}"}"
