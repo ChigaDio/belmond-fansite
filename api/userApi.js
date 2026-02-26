@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     // MongoDB Atlas の画面で確認したデータベース名（例: 'test' や 'belmondfansitedb'）を直接入力してください。
     const database = client.db(db_name); 
     
-    const collection = database.collection('channnls');
+    const collection = database.collection('channels');
     const data = await collection.findOne({});
 
     if (!data) {
