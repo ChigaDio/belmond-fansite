@@ -694,7 +694,7 @@ window.removeTag = idx => {
 // 選択中のプレイリスト
 function getSelectedPlaylists() {
     const checked = document.querySelectorAll('#playlistCheckboxes input:checked');
-    return Array.from(checked).map(input => input.value);
+    return Array.from(checked).map(input => encodeURIComponent(input.value));  // 念のためエンコード
 }
 
 // フィルタ適用

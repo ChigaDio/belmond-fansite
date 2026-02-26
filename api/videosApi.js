@@ -1,31 +1,26 @@
-// pages/api/videosDetailsApi.js または app/api/videosDetailsApi/route.js（Next.jsの場合）
+// pages/api/videosDetailsApi.js
 
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB; // MongoDB接続文字列（環境変数）
+const uri = process.env.DB;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const {
     page = 1,
-    search = '',          // カンマ区切りで複数タグ
-    playlists = '',       // カンマ区切りで複数プレイリストID
+    search = '',
+    playlists = '',
     startDate = '',
     endDate = '',
     type = '',
     sortBy = 'published_at',
-    sortOrder = '-1'      // -1 = desc, 1 = asc
+    sortOrder = '-1'
   } = req.query;
 
   const limit = 20;
@@ -36,53 +31,40 @@ export default async function handler(req, res) {
     const db = client.db('belmond_fan_data');
     const collection = db.collection('videos');
 
-    // フィルタ構築
     const filter = {};
 
-    // タイトル検索（複数AND）
+    // タイトル検索
     if (search) {
       const keywords = search.split(',').map(k => k.trim()).filter(Boolean);
       if (keywords.length > 0) {
-        filter.title = {
-          $and: keywords.map(kw => ({ $regex: kw, $options: 'i' }))
-        };
+        filter.title = { $and: keywords.map(kw => ({ $regex: kw, $options: 'i' })) };
       }
     }
 
-    // プレイリスト絞り込み（複数）
+    // プレイリストフィルタ（デバッグログ追加）
     if (playlists) {
       const playlistTitles = playlists.split(',').map(t => decodeURIComponent(t.trim())).filter(Boolean);
+      console.log('Received playlists param:', playlists);               // ← Vercelログで確認用
+      console.log('Decoded playlist titles:', playlistTitles);          
       if (playlistTitles.length > 0) {
         filter.playlist_titles = { $in: playlistTitles };
+        console.log('Applied filter.playlist_titles:', filter.playlist_titles); // フィルタ適用ログ
       }
     }
 
-    // タイプフィルタ（live / shorts / normal_video）
-    if (type) {
-      filter.type = type; // DBにtypeフィールドがある前提
-    }
-
-    // 日付範囲
+    // 他のフィルタ（変更なし）
+    if (type) filter.type = type;
     if (startDate || endDate) {
       filter.published_at = {};
       if (startDate) filter.published_at.$gte = new Date(startDate);
       if (endDate) filter.published_at.$lte = new Date(endDate + 'T23:59:59.999Z');
     }
 
-    // ソート
     const sortDirection = sortOrder === '-1' ? -1 : 1;
     const sort = { [sortBy]: sortDirection };
 
-    // 総件数
     const totalCount = await collection.countDocuments(filter);
-
-    // データ取得
-    const videos = await collection
-      .find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    const videos = await collection.find(filter).sort(sort).skip(skip).limit(limit).toArray();
 
     res.status(200).json({
       videos,
@@ -93,11 +75,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('API Error:', error);
-    res.status(500).json({
-      error: 'サーバーエラー',
-      details: error.message
-    });
-  } finally {
-    // await client.close(); // Serverlessでは接続を閉じない方が良い場合が多い
+    res.status(500).json({ error: 'サーバーエラー', details: error.message });
   }
 }
