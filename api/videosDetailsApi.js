@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     }
 
     // 他のフィルタ（変更なし）
-    if (type) filter.type = type;
+    if (type) filter.content_category = type;
     if (startDate || endDate) {
       filter.published_at = {};
       if (startDate) filter.published_at.$gte = new Date(startDate);
