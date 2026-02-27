@@ -763,9 +763,16 @@ function isFavorite(videoId) {
     return favorites.includes(videoId);
 }
 
-function toggleFavorite(videoId) {
+async function toggleFavorite(videoId) {
+    showLoading();
+
+    const url = new URL('https://belmond-fansite.vercel.app/api/favoCalculationApi');
+    url.searchParams.set('videoId', videoId);
+
+
     if (isFavorite(videoId)) {
         favorites = favorites.filter(id => id !== videoId);
+        url.searchParams.set('addNum', -1);
     } else {
         if (favorites.length >= MAX_FAVORITES) {
             alert(`お気に入りは最大${MAX_FAVORITES}件までです。`);
@@ -773,11 +780,22 @@ function toggleFavorite(videoId) {
         }
         favorites.push(videoId);
     }
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+    } catch (err) {
+        console.error('KPI情報 お気に入り失敗', err);
+    }
+
     saveFavorites();
     document.querySelectorAll(`.favorite-btn[data-id="${videoId}"]`).forEach(btn => {
         btn.classList.toggle('active', isFavorite(videoId));
     });
     if (currentView === 'favorites') loadVideos(1);
+
+    hideLoading();
 }
 
 // タブ切り替え
@@ -982,11 +1000,24 @@ async function loadVideos(page = 1) {
 }
 
 // 再生リスト専用プレイヤー
-function openPlaylistPlayer(videoId, title, index) {
+async function openPlaylistPlayer(videoId, title, index) {
     if (leftPlayer) {
         leftPlayer.destroy();
         leftPlayer = null;
         document.getElementById('leftPlayerWrapper').style.display = 'none';
+    }
+
+    showLoading();
+
+    const url = new URL('https://belmond-fansite.vercel.app/api/playListCalculationApi');
+    url.searchParams.set('playlistId', encodeURIComponent(currentPlaylistId));
+    url.searchParams.set('videoId', videoId);
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+    } catch (err) {
+        console.error('KPI情報 再生リストカウント失敗', err);
     }
 
     currentPlayingIndex = index;
@@ -1007,14 +1038,27 @@ function openPlaylistPlayer(videoId, title, index) {
     document.querySelectorAll('#playlistVideoGrid .video-card').forEach(c => c.classList.remove('playing'));
     const cards = document.querySelectorAll('#playlistVideoGrid .video-card');
     if (cards[index]) cards[index].classList.add('playing');
+
+    hideLoading();
 }
 
 // 通常/お気に入り用モーダルプレイヤー（続き再生対応）
-function openModalPlayer(videoId, title, startTime = 0) {
+ async function openModalPlayer(videoId, title, startTime = 0) {
     if (leftPlayer) {
         leftPlayer.destroy();
         leftPlayer = null;
         document.getElementById('leftPlayerWrapper').style.display = 'none';
+    }
+
+    showLoading();
+    const url = new URL('https://belmond-fansite.vercel.app/api/videoPlayCalculationApi');
+    url.searchParams.set('id', videoId);
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+    } catch (err) {
+        console.error('KPI情報 動画カウント失敗', err);
     }
 
     document.getElementById('videoModal').style.display = 'flex';
@@ -1044,6 +1088,8 @@ function openModalPlayer(videoId, title, startTime = 0) {
     });
 
     document.getElementById('modalLoopStatus').textContent = modalLoopEnabled ? 'ON' : 'OFF';
+
+    hideLoading();
 }
 
 // 左固定へ移動（時間保持）
@@ -1182,7 +1228,7 @@ document.getElementById('closeModal').addEventListener('click', () => {
 });
 
 // 連続再生（再生リスト用）← 自動次再生OFF時は完全に停止するように修正
-function onPlayerStateChange(event) {
+async function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.ENDED) {
         if (currentView === 'playlists' && currentPlaylistId && player && event.target === player) {
             if (autoNextEnabled) {
@@ -1194,6 +1240,20 @@ function onPlayerStateChange(event) {
                         return; // ループも次もなし → 停止
                     }
                 }
+                showLoading();
+
+                const url = new URL('https://belmond-fansite.vercel.app/api/playListCalculationApi');
+                url.searchParams.set('playlistId', encodeURIComponent(currentPlaylistId));
+                url.searchParams.set('videoId', currentPlaylistVideos[nextIndex]._id);
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                } catch (err) {
+                    console.error('KPI情報 再生リストカウント失敗', err);
+                }
+
+                hideLoading()
                 currentPlayingIndex = nextIndex;
                 const nextVideo = currentPlaylistVideos[currentPlayingIndex];
                 if (nextVideo) openPlaylistPlayer(nextVideo._id, nextVideo.title, currentPlayingIndex);

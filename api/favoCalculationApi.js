@@ -13,20 +13,27 @@ export default async function handler(req, res) {
 
   const { videoId = '', addNum = 1 } = req.query;
 
-  if (!videoId.trim()) {
-    return res.status(200).json({ success: true, modified: 0 });
+  if (!videoId) {
+    return res.status(400).json({ error: 'videoId is required' });
   }
 
-
+  const num = parseInt(addNum);
+  if (isNaN(num)) {
+    return res.status(400).json({ error: 'addNum must be number' });
+  }
 
   try {
     await client.connect();
     const db = client.db('belmond_fan_data');
     const collection = db.collection('videos');
 
+    const query = num < 0
+      ? { _id: videoId, favoNum: { $gt: 0 } }
+      : { _id: videoId };
+
     const result = await collection.updateOne(
-      { _id: videoId },
-      { $inc: { favoNum: parseInt(addNum) } }
+      query,
+      { $inc: { favoNum: num } }
     );
 
     res.status(200).json({
