@@ -11,21 +11,21 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const { ids = '', addNum = 1 } = req.query;
+  const { videoId = '', addNum = 1 } = req.query;
 
-  if (!ids.trim()) {
+  if (!videoId.trim()) {
     return res.status(200).json({ success: true, modified: 0 });
   }
 
-  const videoIds = ids.split(',').map(id => id.trim()).filter(Boolean);
+
 
   try {
     await client.connect();
     const db = client.db('belmond_fan_data');
     const collection = db.collection('videos');
 
-    const result = await collection.updateMany(
-      { _id: { $in: videoIds } },
+    const result = await collection.updateOne(
+      { _id: videoId },
       { $inc: { favoNum: parseInt(addNum) } }
     );
 
