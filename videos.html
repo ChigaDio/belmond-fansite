@@ -171,13 +171,13 @@
         .video-card.medium  { max-width:360px; }
         .video-card.small   { max-width:300px; }
 
-        /* 検索・お気に入りグリッド（4列に戻す） */
+        /* 検索・お気に入りグリッド */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(310px, 1fr));
             gap: 2.6rem;
-              align-items: center;
-  justify-content: center;
+            align-items: center;
+            justify-content: center;
         }
 
         .pagination { margin:4rem auto 2rem; text-align:center; display:flex; justify-content:center; flex-wrap:wrap; gap:8px; }
@@ -202,6 +202,7 @@
         .playlist-main-player {
             background:#000; border-radius:24px; overflow:hidden;
             box-shadow:0 20px 60px rgba(0,0,0,0.75); transition:all 0.6s ease;
+            position:relative;
         }
         .playlist-main-player.large   { width:100%; max-width:1400px; margin:0 auto; aspect-ratio:16/9; }
         .playlist-main-player.medium  { width:85%; max-width:1100px; margin:0 auto; aspect-ratio:16/9; }
@@ -253,20 +254,11 @@
 
         .close-btn {
             position:absolute; top:16px; right:20px; font-size:3rem; color:white; cursor:pointer; z-index:10; text-shadow:0 0 10px black;
+            display: none;
         }
-        .player-size-btn {
-            position:absolute; top:16px; right:80px; z-index:10;
-            background:rgba(0,0,0,0.7); color:white; border:none;
-            padding:10px 16px; border-radius:10px; cursor:pointer; font-size:0.95rem;
+        #modalHamburger {
+            position:absolute; top:16px; right:75px; z-index:10;
         }
-        .player-size-btn:hover { background:rgba(168,117,138,0.9); }
-
-        .player-resize-btn {
-            position:absolute; top:16px; right:200px; z-index:10;
-            background:rgba(0,0,0,0.7); color:white; border:none;
-            padding:10px 16px; border-radius:10px; cursor:pointer; font-size:0.95rem;
-        }
-        .player-resize-btn:hover { background:rgba(168,117,138,0.9); }
 
         #loadingOverlay {
             display:none; position:fixed; inset:0; background:rgba(20,11,15,0.94); z-index:2000;
@@ -285,6 +277,91 @@
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             display: none;
+            overflow: hidden;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 32px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.75));
+            color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            cursor: move;
+            z-index: 1015;
+            user-select: none;
+            font-family: "DotGothic16", sans-serif;
+            letter-spacing: 1px;
+            display: none;
+            text-align:center;
+        }
+
+
+        /* ハンバーガーメニュー（全プレイヤー共通） */
+        .hamburger-btn {
+            position:absolute;
+            top:16px;
+            right:20px;
+            z-index:2010;
+            background:rgba(0,0,0,0.75);
+            color:white;
+            border:none;
+            padding:8px 12px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:1.35rem;
+            line-height:1;
+            transition:0.2s;
+            display: none;
+        }
+        .hamburger-btn:hover { background:rgba(168,117,138,0.9); }
+        .hamburger-menu {
+            position:absolute;
+            top:55px;
+            right:20px;
+            background:rgba(42,28,36,0.96);
+            border:1px solid var(--accent);
+            border-radius:10px;
+            padding:6px 0;
+            display:none;
+            z-index:1020;
+            box-shadow:0 8px 25px rgba(0,0,0,0.7);
+            min-width:165px;
+        }
+        .hamburger-menu button {
+            background:none;
+            border:none;
+            color:var(--text-main);
+            padding:11px 18px;
+            text-align:left;
+            width:100%;
+            cursor:pointer;
+            font-size:1.02rem;
+            transition:0.2s;
+        }
+        .hamburger-menu button:hover {
+            background:rgba(168,117,138,0.25);
+        }
+
+        /* ホバー時にコントロール表示 */
+        .modal-content:hover .hamburger-btn,
+        .modal-content:hover .close-btn,
+        #leftPlayerWrapper:hover .hamburger-btn,
+        #leftPlayerWrapper:hover .drag-handle,
+        .playlist-main-player:hover .hamburger-btn {
+            display: block;
+        }
+
+        /* メニューが見切れないように（overflow visible） */
+        #leftPlayerWrapper {
+            overflow: visible;
+        }
+        #leftPlayerWrapper .hamburger-menu {
+            overflow: visible;
+            right: -10px; /* 左寄せ時でもメニューが飛び出せるよう調整 */
         }
 
         @media (max-width:1024px) {
@@ -384,9 +461,19 @@
 
             <div id="currentPlaylistVideos" class="playlist-videos" style="display:none;">
                 <h3 id="currentPlaylistTitle"></h3>
+                <div style="display:flex; align-items:center; gap:1.5rem; margin-bottom:1rem; padding:0.8rem 1.2rem; background:#3a252e; border-radius:12px;">
+                    <label style="color:var(--text-sub); white-space:nowrap;">自動次再生:</label>
+                    <input type="checkbox" id="autoNextToggle" checked style="accent-color:var(--accent); transform:scale(1.2);">
+                    <label style="color:var(--text-sub); white-space:nowrap; margin-left:1rem;">プレイリストをループ:</label>
+                    <input type="checkbox" id="playlistLoopToggle" checked style="accent-color:var(--accent); transform:scale(1.2);">
+                </div>
                 <div class="playlist-player-layout">
                     <div class="playlist-main-area">
                         <div class="playlist-main-player large" id="playlistMainPlayer">
+                            <button class="hamburger-btn" id="playlistHamburger">☰</button>
+                            <div id="playlistHamburgerMenu" class="hamburger-menu">
+                                <button onclick="cyclePlaylistSize()">サイズ変更</button>
+                            </div>
                             <div class="video-player" id="playlistMainPlayerContainer"></div>
                         </div>
                     </div>
@@ -403,18 +490,30 @@
         <div>読み込み中...</div>
     </div>
 
-    <!-- 通常/お気に入り用モーダル（独立） -->
+    <!-- 通常/お気に入り用モーダル -->
     <div id="videoModal">
         <div class="modal-content">
             <span class="close-btn" id="closeModal">×</span>
-            <button class="player-size-btn" id="modalToLeftBtn">左に固定</button>
-            <button class="player-resize-btn" id="resizePlayerBtn">縮小/拡大</button>
+            <button class="hamburger-btn" id="modalHamburger">☰</button>
+            <div id="modalHamburgerMenu" class="hamburger-menu">
+                <button onclick="toggleModalLoop()">ループ: <span id="modalLoopStatus">OFF</span></button>
+                <button onclick="cycleModalSize()">サイズ変更</button>
+                <button onclick="moveToLeftPlayer()">左に固定</button>
+            </div>
             <div class="modal-player" id="modalPlayerContainer"></div>
         </div>
     </div>
 
-    <!-- 左固定プレイヤー -->
-    <div id="leftPlayerWrapper" style="display:none;">
+    <!-- 左固定プレイヤー（ドラッグ可能＋続き再生＋マウスホバーでメニュー） -->
+    <div id="leftPlayerWrapper">
+        <div class="drag-handle">≡ ドラッグして移動</div>
+        <button class="hamburger-btn" id="leftHamburger" style="top:10px;right:10px;">☰</button>
+        <div id="leftHamburgerMenu" class="hamburger-menu" style="top:55px;right:10px;">
+            <button onclick="toggleLeftLoop()">ループ: <span id="leftLoopStatus">OFF</span></button>
+            <button onclick="cycleLeftSize()">サイズ変更</button>
+            <button onclick="returnToModalFromLeft()">元に戻す</button>
+            <button onclick="closeLeftPlayer()">閉じる</button>
+        </div>
         <div id="leftPlayerContainer" style="width:100%; height:100%;"></div>
     </div>
 </main>
@@ -431,15 +530,30 @@ let currentSort = 'published_at,-1';
 let currentView = 'search';
 let currentPlaylistId = null;
 let favorites = JSON.parse(localStorage.getItem('belmond_favorites') || '[]');
-let playlistVideoOrder = JSON.parse(localStorage.getItem('belmond_playlist_order') || '{}');
 let currentPlaylistVideos = [];
 let currentPlayingIndex = -1;
 let player = null; // プレイリスト用
 let modalPlayer = null; // モーダル用
 let leftPlayer = null; // 左固定用
 let isLeftFixed = false;
-let currentPlayerSize = 'large'; // 初期サイズをlargeに
+let currentPlayerSize = 'large';
 const MAX_FAVORITES = 20;
+let autoNextEnabled = true;
+let playlistLoopEnabled = true;
+let modalLoopEnabled = false;
+let leftLoopEnabled = false;
+let lastVideoTime = 0; // 移動時に時間を保持
+
+// 左固定プレイヤー用
+let leftPlayerSizeIndex = 1;
+const leftPlayerSizes = [
+    {width: '320px', height: '180px'},
+    {width: '400px', height: '225px'},
+    {width: '560px', height: '315px'}
+];
+let isDraggingLeft = false;
+let leftDragOffsetX = 0;
+let leftDragOffsetY = 0;
 
 // ユーティリティ
 function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
@@ -509,20 +623,79 @@ async function loadPlaylists() {
 // タグ入力
 const searchInput = document.getElementById('searchInput');
 const tagContainer = document.getElementById('searchTags');
+// IMEの状態を追跡するためのフラグ（大事！）
+let isComposing = false;
+
+searchInput.addEventListener('compositionstart', () => {
+    isComposing = true;
+});
+
+searchInput.addEventListener('compositionend', () => {
+    isComposing = false;
+});
+
+// keydown: Enter, Backspace, 半角スペース/カンマ（IMEオフ時）を処理
 searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === '　' || e.key === ',') {
+    if (isComposing) {
+        return; // IME変換中はkeydownを無視してbeforeinputに任せる
+    }
+
+    if (e.key === 'Enter') {
         e.preventDefault();
-        const val = searchInput.value.trim();
-        if (val && !currentSearchTags.includes(val)) {
-            currentSearchTags.push(val);
-            renderTags();
-        }
-        searchInput.value = '';
-    } else if (e.key === 'Backspace' && searchInput.value === '' && currentSearchTags.length > 0) {
+        addTagAndClear();
+        return;
+    }
+
+    if (e.key === 'Backspace' && searchInput.value === '' && currentSearchTags.length > 0) {
         currentSearchTags.pop();
         renderTags();
+        return;
+    }
+
+    // 半角スペース・カンマ（IMEオフ時のみ）
+    if (e.key === ' ' || e.key === ',') {
+        e.preventDefault();
+        addTagAndClear();
     }
 });
+
+// beforeinput: 全角/半角のスペース・カンマをここで捕まえる（IME確定時も対応）
+searchInput.addEventListener('beforeinput', e => {
+    if (e.inputType === 'insertCompositionText' && e.data) {
+        // スペース（半角/全角）またはカンマ（半角/全角）を検知
+        if (/[ ,，　]/.test(e.data)) {
+            e.preventDefault(); // 入力させない
+            addTagAndClear();
+
+            // 稀に既に1文字入っちゃってる場合の後処理
+            setTimeout(() => {
+                const val = searchInput.value;
+                if (val.endsWith(' ') || val.endsWith('　') || 
+                    val.endsWith(',') || val.endsWith('，')) {
+                    searchInput.value = val.slice(0, -1);
+                }
+            }, 0);
+        }
+    }
+});
+
+function addTagAndClear() {
+    const val = searchInput.value.trim();
+    if (val && !currentSearchTags.includes(val)) {
+        currentSearchTags.push(val);
+        renderTags();
+    }
+    searchInput.value = '';
+}
+
+function addTagAndClear() {
+    const val = searchInput.value.trim();
+    if (val && !currentSearchTags.includes(val)) {
+        currentSearchTags.push(val);
+        renderTags();
+    }
+    searchInput.value = '';
+}
 function renderTags() {
     tagContainer.querySelectorAll('.search-tag').forEach(t => t.remove());
     currentSearchTags.forEach((text, idx) => {
@@ -548,6 +721,7 @@ function applyFilters() {
     if (val && !currentSearchTags.includes(val)) {
         currentSearchTags.push(val);
         renderTags();
+        searchInput.value = '';
     }
     currentSearchTags = currentSearchTags.filter(t => t.trim());
     currentPlaylists = getSelectedPlaylists();
@@ -606,11 +780,8 @@ function switchTab(view) {
     currentView = view;
     currentPlaylistId = null;
     currentPlayingIndex = -1;
-    // isLeftFixed = false; // 左固定は維持
-    // currentPlayerSize = 'large'; // サイズリセットしない
-    if (player) { player.destroy(); player = null; } // プレイリスト用のみ破棄
-    if (modalPlayer) { modalPlayer.destroy(); modalPlayer = null; } // モーダル用破棄
-    // leftPlayerはそのまま
+    if (player) { player.destroy(); player = null; }
+    if (modalPlayer) { modalPlayer.destroy(); modalPlayer = null; }
 
     document.querySelectorAll('.tab-nav a').forEach(a => a.classList.remove('active'));
     document.getElementById(`tab-${view}`).classList.add('active');
@@ -666,7 +837,6 @@ async function loadPlaylistList() {
                 document.getElementById('playlistGrid').style.display = 'none';
                 document.getElementById('currentPlaylistTitle').textContent = pl.title;
                 document.getElementById('currentPlaylistVideos').style.display = 'block';
-                document.getElementById('currentPlaylistVideos').classList.add('show');
                 document.getElementById('playlistMainPlayerContainer').innerHTML = '';
                 loadVideos(1);
             });
@@ -720,7 +890,15 @@ async function loadVideos(page = 1) {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const videos = data.videos || data || [];
+        let videos = data.videos || data || [];
+
+        if (currentView === 'playlists' && currentPlaylistId) {
+            videos.sort((a, b) => {
+                const dateA = new Date(a.published_at || a.actual_end_time || a.scheduled_start_time || '1970-01-01');
+                const dateB = new Date(b.published_at || b.actual_end_time || b.scheduled_start_time || '1970-01-01');
+                return dateA.getTime() - dateB.getTime();
+            });
+        }
 
         let grid;
         if (currentView === 'playlists' && currentPlaylistId) {
@@ -800,7 +978,6 @@ async function loadVideos(page = 1) {
 
 // 再生リスト専用プレイヤー
 function openPlaylistPlayer(videoId, title, index) {
-    // 左固定プレイヤーを破棄
     if (leftPlayer) {
         leftPlayer.destroy();
         leftPlayer = null;
@@ -827,9 +1004,8 @@ function openPlaylistPlayer(videoId, title, index) {
     if (cards[index]) cards[index].classList.add('playing');
 }
 
-// 通常/お気に入り用モーダルプレイヤー
-function openModalPlayer(videoId, title) {
-    // 左固定プレイヤーを破棄
+// 通常/お気に入り用モーダルプレイヤー（続き再生対応）
+function openModalPlayer(videoId, title, startTime = 0) {
     if (leftPlayer) {
         leftPlayer.destroy();
         leftPlayer = null;
@@ -844,18 +1020,32 @@ function openModalPlayer(videoId, title) {
         width: '100%',
         videoId: videoId,
         playerVars: { autoplay: 1, rel: 0, modestbranding: 1 },
-        events: { onStateChange: e => {
-            if (e.data === YT.PlayerState.ENDED) {
-                document.getElementById('videoModal').style.display = 'none';
+        events: {
+            onReady: function() {
+                this.seekTo(startTime);
+                this.playVideo();
+            },
+            onStateChange: e => {
+                if (e.data === YT.PlayerState.ENDED) {
+                    if (modalLoopEnabled && modalPlayer) {
+                        modalPlayer.seekTo(0);
+                        modalPlayer.playVideo();
+                    }
+                    // 閉じないように変更
+                }
             }
-        }}
+        }
     });
+
+    document.getElementById('modalLoopStatus').textContent = modalLoopEnabled ? 'ON' : 'OFF';
 }
 
-// モーダルから左固定へ移動
-document.getElementById('modalToLeftBtn').addEventListener('click', () => {
+// 左固定へ移動（時間保持）
+function moveToLeftPlayer() {
     const videoId = modalPlayer?.getVideoData()?.video_id;
     if (!videoId) return;
+
+    lastVideoTime = modalPlayer.getCurrentTime() || 0;
 
     document.getElementById('videoModal').style.display = 'none';
     if (modalPlayer) {
@@ -865,8 +1055,12 @@ document.getElementById('modalToLeftBtn').addEventListener('click', () => {
 
     const leftWrapper = document.getElementById('leftPlayerWrapper');
     leftWrapper.style.display = 'block';
-    leftWrapper.style.width = '400px';
-    leftWrapper.style.height = '225px';
+    const size = leftPlayerSizes[leftPlayerSizeIndex];
+    leftWrapper.style.width = size.width;
+    leftWrapper.style.height = size.height;
+    leftWrapper.style.left = '20px';
+    leftWrapper.style.top = '100px';
+
     document.getElementById('leftPlayerContainer').innerHTML = '';
 
     leftPlayer = new YT.Player('leftPlayerContainer', {
@@ -874,15 +1068,23 @@ document.getElementById('modalToLeftBtn').addEventListener('click', () => {
         width: '100%',
         videoId: videoId,
         playerVars: { autoplay: 1, rel: 0, modestbranding: 1 },
-        events: { onStateChange: onPlayerStateChange }
+        events: {
+            onReady: function() {
+                this.seekTo(lastVideoTime);
+                this.playVideo();
+            },
+            onStateChange: onPlayerStateChange
+        }
     });
 
+    leftLoopEnabled = modalLoopEnabled;
+    document.getElementById('leftLoopStatus').textContent = leftLoopEnabled ? 'ON' : 'OFF';
     isLeftFixed = true;
     currentPlayerSize = 'medium';
-});
+}
 
-// 動画サイズ変更機能 (モーダル用)
-document.getElementById('resizePlayerBtn').addEventListener('click', () => {
+// モーダルサイズ変更
+function cycleModalSize() {
     const modalContent = document.querySelector('.modal-content');
     if (currentPlayerSize === 'large') {
         modalContent.style.width = '70vw';
@@ -897,7 +1099,64 @@ document.getElementById('resizePlayerBtn').addEventListener('click', () => {
         modalContent.style.height = '80vh';
         currentPlayerSize = 'large';
     }
-});
+}
+
+// 再生リストサイズ変更
+function cyclePlaylistSize() {
+    const sizes = ['small', 'medium', 'large'];
+    let idx = sizes.indexOf(currentPlayerSize);
+    idx = (idx + 1) % 3;
+    currentPlayerSize = sizes[idx];
+    const playerDiv = document.getElementById('playlistMainPlayer');
+    playerDiv.className = `playlist-main-player ${currentPlayerSize}`;
+}
+
+// 左固定サイズ変更
+function cycleLeftSize() {
+    leftPlayerSizeIndex = (leftPlayerSizeIndex + 1) % 3;
+    const size = leftPlayerSizes[leftPlayerSizeIndex];
+    const wrapper = document.getElementById('leftPlayerWrapper');
+    wrapper.style.width = size.width;
+    wrapper.style.height = size.height;
+}
+
+// 左固定ループトグル
+function toggleLeftLoop() {
+    leftLoopEnabled = !leftLoopEnabled;
+    document.getElementById('leftLoopStatus').textContent = leftLoopEnabled ? 'ON' : 'OFF';
+}
+
+// モーダルループトグル
+function toggleModalLoop() {
+    modalLoopEnabled = !modalLoopEnabled;
+    document.getElementById('modalLoopStatus').textContent = modalLoopEnabled ? 'ON' : 'OFF';
+}
+
+// 左固定からモーダルに戻す（時間保持）
+function returnToModalFromLeft() {
+    let videoId = null;
+    if (leftPlayer) {
+        lastVideoTime = leftPlayer.getCurrentTime() || 0;
+        videoId = leftPlayer.getVideoData()?.video_id;
+        leftPlayer.destroy();
+        leftPlayer = null;
+    }
+    document.getElementById('leftPlayerWrapper').style.display = 'none';
+    closeAllMenus();
+    if (videoId) {
+        openModalPlayer(videoId, '', lastVideoTime);
+    }
+}
+
+// 左固定閉じる
+function closeLeftPlayer() {
+    if (leftPlayer) {
+        leftPlayer.destroy();
+        leftPlayer = null;
+    }
+    document.getElementById('leftPlayerWrapper').style.display = 'none';
+    closeAllMenus();
+}
 
 // モーダル閉じる
 document.getElementById('closeModal').addEventListener('click', () => {
@@ -908,12 +1167,30 @@ document.getElementById('closeModal').addEventListener('click', () => {
     }
 });
 
-// 連続再生（再生リスト用）
+// 連続再生（再生リスト用）← 自動次再生OFF時は完全に停止するように修正
 function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED && currentView === 'playlists' && currentPlaylistId) {
-        currentPlayingIndex = (currentPlayingIndex + 1) % currentPlaylistVideos.length;
-        const next = currentPlaylistVideos[currentPlayingIndex];
-        if (next) openPlaylistPlayer(next._id, next.title, currentPlayingIndex);
+    if (event.data === YT.PlayerState.ENDED) {
+        if (currentView === 'playlists' && currentPlaylistId && player && event.target === player) {
+            if (autoNextEnabled) {
+                let nextIndex = currentPlayingIndex + 1;
+                if (nextIndex >= currentPlaylistVideos.length) {
+                    if (playlistLoopEnabled) {
+                        nextIndex = 0;
+                    } else {
+                        return; // ループも次もなし → 停止
+                    }
+                }
+                currentPlayingIndex = nextIndex;
+                const nextVideo = currentPlaylistVideos[currentPlayingIndex];
+                if (nextVideo) openPlaylistPlayer(nextVideo._id, nextVideo.title, currentPlayingIndex);
+            }
+            // autoNextEnabled=false の場合は何もしない（動画終了）
+        } else if (leftPlayer && event.target === leftPlayer) {
+            if (leftLoopEnabled) {
+                event.target.seekTo(0);
+                event.target.playVideo();
+            }
+        }
     }
 }
 
@@ -952,11 +1229,48 @@ function renderSmartPagination(current, total) {
     });
 }
 
+// ハンバーガーメニュー共通
+function closeAllMenus() {
+    document.querySelectorAll('.hamburger-menu').forEach(m => m.style.display = 'none');
+}
+
+// 左固定ドラッグ（drag-handleのみ）
+function makeLeftPlayerDraggable() {
+    const wrapper = document.getElementById('leftPlayerWrapper');
+    const handle = document.querySelector('.drag-handle');
+
+    handle.addEventListener('mousedown', e => {
+        isDraggingLeft = true;
+        const rect = wrapper.getBoundingClientRect();
+        leftDragOffsetX = e.clientX - rect.left;
+        leftDragOffsetY = e.clientY - rect.top;
+        wrapper.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!isDraggingLeft) return;
+        let newLeft = e.clientX - leftDragOffsetX;
+        let newTop = e.clientY - leftDragOffsetY;
+        newLeft = Math.max(10, Math.min(window.innerWidth - parseInt(wrapper.style.width) - 10, newLeft));
+        newTop = Math.max(10, Math.min(window.innerHeight - parseInt(wrapper.style.height) - 10, newTop));
+        wrapper.style.left = newLeft + 'px';
+        wrapper.style.top = newTop + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDraggingLeft) {
+            isDraggingLeft = false;
+            wrapper.style.transition = 'all 0.3s';
+        }
+    });
+}
+
 // 初期化
 window.addEventListener('load', () => {
     loadFollowerCount();
     loadPlaylists();
     switchTab('search');
+    makeLeftPlayerDraggable();
 
     document.getElementById('tab-search').addEventListener('click', e => { e.preventDefault(); switchTab('search'); });
     document.getElementById('tab-favorites').addEventListener('click', e => { e.preventDefault(); switchTab('favorites'); });
@@ -965,6 +1279,44 @@ window.addEventListener('load', () => {
     window.addEventListener('scroll', () => {
         document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
     });
+
+    // ハンバーガーメニュー（クリック）
+    const modalHamburger = document.getElementById('modalHamburger');
+    const modalMenu = document.getElementById('modalHamburgerMenu');
+    modalHamburger.addEventListener('click', e => {
+        e.stopImmediatePropagation();
+        const wasVisible = modalMenu.style.display === 'block';
+        closeAllMenus();
+        if (!wasVisible) modalMenu.style.display = 'block';
+    });
+
+    const leftHamburger = document.getElementById('leftHamburger');
+    const leftMenu = document.getElementById('leftHamburgerMenu');
+    leftHamburger.addEventListener('click', e => {
+        e.stopImmediatePropagation();
+        const wasVisible = leftMenu.style.display === 'block';
+        closeAllMenus();
+        if (!wasVisible) leftMenu.style.display = 'block';
+    });
+
+    const playlistHamburger = document.getElementById('playlistHamburger');
+    const playlistMenu = document.getElementById('playlistHamburgerMenu');
+    playlistHamburger.addEventListener('click', e => {
+        e.stopImmediatePropagation();
+        const wasVisible = playlistMenu.style.display === 'block';
+        closeAllMenus();
+        if (!wasVisible) playlistMenu.style.display = 'block';
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.hamburger-btn') && !e.target.closest('.hamburger-menu')) {
+            closeAllMenus();
+        }
+    });
+
+    // プレイリストトグル
+    document.getElementById('autoNextToggle').addEventListener('change', e => autoNextEnabled = e.target.checked);
+    document.getElementById('playlistLoopToggle').addEventListener('change', e => playlistLoopEnabled = e.target.checked);
 });
 </script>
 </body>
