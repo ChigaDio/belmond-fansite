@@ -2,7 +2,7 @@ from zoneinfo import ZoneInfo
 
 from youtubedataapi import Weekday, YoutubeContentType, YoutubeDataFind,YoutubeUser, YoutubeOrder, YoutubeVideoDetail,get_youtube_data,YoutubePlayData,match_videos_to_playlists
 import argparse
-from pymongo import MongoClient, UpdateOne
+from pymongo import MongoClient, UpdateOne,DeleteOne
 from pymongo.server_api import ServerApi
 from pymongo.errors import ConfigurationError, PyMongoError
 import urllib.parse
@@ -285,14 +285,21 @@ def save_to_mongodb(
                 upsert=True
             )
         )
+        
+    latest_video_ids = [video.video_id for video in videos]
 
     if operations:
         try:
             result = videos_coll.bulk_write(operations, ordered=False)
+            delete_result = videos_coll.delete_many({
+                                "_id": {"$nin": latest_video_ids}
+                            })
+
+            
             print(f"動画保存結果:")
             print(f"  - 挿入（新規）   : {result.upserted_count} 件")
             print(f"  - 更新（既存）   : {result.modified_count} 件")
-            print(f"  - 合計処理件数   : {len(operations)} 件")
+            print(f"  - 削除（不要）   : {delete_result.deleted_count} 件")
         except PyMongoError as e:
             print(f"Bulk write エラー: {e}")
             traceback.print_exc()
@@ -317,12 +324,17 @@ def save_to_mongodb(
                 upsert=True
             )
         )
+    latest_playlist_ids = [playlist.playlist_id for playlist in playList]
     if operations:
         try:
             result = videos_coll.bulk_write(operations, ordered=False)
+            delete_result = videos_coll.delete_many({
+                                "_id": {"$nin": latest_playlist_ids}
+                            })
             print(f"プレイリスト保存結果:")
             print(f"  - 挿入（新規）   : {result.upserted_count} 件")
             print(f"  - 更新（既存）   : {result.modified_count} 件")
+            print(f"  - 削除（不要）   : {delete_result.deleted_count} 件")
         except PyMongoError as e:
             print(f"Bulk write エラー: {e}")
             traceback.print_exc()
