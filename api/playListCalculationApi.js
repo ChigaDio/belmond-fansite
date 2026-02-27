@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
     if (playlistId) {
       const r = await playlistCol.updateOne(
-        { _id: playlistId },
+        { title: playlistId },
         { $inc: { playNum: num } }
       );
       playlistModified = r.modifiedCount;
