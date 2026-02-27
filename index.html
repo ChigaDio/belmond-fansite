@@ -152,7 +152,6 @@
         .ticker {
             display: flex;
             flex-wrap: nowrap;
-            animation: scroll-left 120s linear infinite;
             will-change: transform;
         }
         .ticker:hover {
@@ -381,6 +380,26 @@ async function loadFollowerCount() {
     }
 }
 
+function startTickerLoop() {
+    const ticker = document.getElementById('videoTicker');
+    let pos = 0;
+    let speed = 0.5; // ← 流れる速さ（小さいほどゆっくり）
+
+    function loop() {
+        pos -= speed;
+
+        const halfWidth = ticker.scrollWidth / 2;
+        if (Math.abs(pos) >= halfWidth) {
+            pos = 0;
+        }
+
+        ticker.style.transform = `translateX(${pos}px)`;
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+}
+
 async function loadVideos() {
     try {
         const response = await fetch('https://belmond-fansite.vercel.app/api/videosApi');
@@ -434,6 +453,7 @@ async function loadVideos() {
         if (data.videos.length < 4) {
             data.videos.forEach(video => ticker.appendChild(createCard(video)));
         }
+        startTickerLoop();
     } catch (err) {
         console.error(err);
         document.getElementById('videoTicker').innerHTML = 

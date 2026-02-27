@@ -37,7 +37,9 @@ export default async function handler(req, res) {
     if (search) {
       const keywords = search.split(',').map(k => k.trim()).filter(Boolean);
       if (keywords.length > 0) {
-        filter.title = { $and: keywords.map(kw => ({ $regex: kw, $options: 'i' })) };
+        filter.$and = keywords.map(kw => ({
+          title: { $regex: kw, $options: 'i' }
+        }));
       }
     }
 
