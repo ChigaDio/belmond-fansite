@@ -39,8 +39,9 @@ export default async function handler(req, res) {
     let videoModified = 0;
 
     if (playlistId) {
+      const decodedTitle = decodeURIComponent(playlistId.trim());
       const r = await playlistCol.updateOne(
-        { title: playlistId },
+        { title: decodedTitle },
         { $inc: { playNum: num } }
       );
       playlistModified = r.modifiedCount;
