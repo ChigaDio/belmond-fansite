@@ -1242,16 +1242,6 @@ async function onPlayerStateChange(event) {
                 }
                 showLoading();
 
-                const url = new URL('https://belmond-fansite.vercel.app/api/playListCalculationApi');
-                url.searchParams.set('playlistId', encodeURIComponent(currentPlaylistId));
-                url.searchParams.set('videoId', currentPlaylistVideos[nextIndex]._id);
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
-                } catch (err) {
-                    console.error('KPI情報 再生リストカウント失敗', err);
-                }
 
                 hideLoading()
                 currentPlayingIndex = nextIndex;
