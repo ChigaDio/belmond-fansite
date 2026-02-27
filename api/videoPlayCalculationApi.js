@@ -1,7 +1,7 @@
 // pages/api/videosPlayCountApi.js
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB;
+const uri = process.env.DB_COUNT;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
