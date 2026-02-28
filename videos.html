@@ -1304,15 +1304,7 @@ if (isLive) {
             <button onclick="toggleModalChat()">Toggle Chat</button>
         </div>
     `;
-    // イベント再バインド（ここを追加）
-    const modalHamburger = document.getElementById('modalHamburger');
-    const modalMenu = document.getElementById('modalHamburgerMenu');
-    modalHamburger.addEventListener('click', e => {
-        e.stopImmediatePropagation();
-        const wasVisible = modalMenu.style.display === 'block';
-        closeAllMenus();
-        if (!wasVisible) modalMenu.style.display = 'block';
-    });
+
 } else {
         // 非ライブ時は元通り
         modalContent.innerHTML = `
@@ -1328,6 +1320,15 @@ if (isLive) {
             </div>
         `;
     }
+        // イベント再バインド（ここを追加）
+    const modalHamburger = document.getElementById('modalHamburger');
+    const modalMenu = document.getElementById('modalHamburgerMenu');
+    modalHamburger.addEventListener('click', e => {
+        e.stopImmediatePropagation();
+        const wasVisible = modalMenu.style.display === 'block';
+        closeAllMenus();
+        if (!wasVisible) modalMenu.style.display = 'block';
+    });
 
     modalPlayer = new YT.Player('modalYoutubePlayer', {
         height: '100%',
