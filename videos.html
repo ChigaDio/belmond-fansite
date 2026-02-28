@@ -527,6 +527,28 @@
     height: 100% !important;
     min-height: 400px;  /* 最低高さを設定（入力欄が見えるように） */
 }
+
+/* チャットセクション自体の設定 */
+.modal-chat-section {
+    flex: 0 0 400px; /* チャット欄の幅を固定（お好みで調整） */
+    display: flex;
+    flex-direction: column; /* 縦に並べる（ヘッダー + iframe） */
+    height: 100%;
+    background: #161b22;
+    border-left: 1px solid #30363d;
+    overflow: hidden; /* 内部のiframeがはみ出さないようにする */
+    position: relative;
+}
+
+/* iframeの設定：ここが重要です */
+.modal-chat-section iframe {
+    flex-grow: 1; /* 余ったスペースをすべて埋める */
+    width: 100% !important;
+    height: 0; /* 一旦0にすることでFlexboxに計算を強制させる */
+    min-height: 100%; /* 最低でも親いっぱいの高さを確保 */
+    border: none;
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -1262,6 +1284,8 @@ async function openPlaylistPlayer(videoId, title, index) {
         document.getElementById('leftPlayerWrapper').style.display = 'none';
     }
 
+    console.log(`動画再生: ${title} (ID: ${videoId})`);
+
     showLoading();
     const url = new URL('https://belmond-fansite.vercel.app/api/videoPlayCalculationApi');
     url.searchParams.set('id', videoId);
@@ -1279,6 +1303,8 @@ async function openPlaylistPlayer(videoId, title, index) {
     document.getElementById('videoModal').style.display = 'flex';
     const modalContent = document.querySelector('.modal-content');
 if (isLive) {
+
+    const embedDomain = window.location.hostname;
     modalContent.innerHTML = `
         <div class="modal-container">
             <div class="modal-video-section modal-video-centered">
@@ -1290,8 +1316,9 @@ if (isLive) {
   id="modalChatIframe"
   width="100%" 
   height="500" 
-  src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=belmond-fansite.vercel.app&dark_theme=1"
-  frameborder="0">
+  src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${embedDomain}&dark_theme=1"
+  frameborder="0"
+  >
 </iframe>
             </div>
         </div>
@@ -1354,6 +1381,16 @@ if (isLive) {
     });
 
     document.getElementById('modalLoopStatus').textContent = modalLoopEnabled ? 'ON' : 'OFF';
+
+    const chatIframe = document.getElementById('modalChatIframe');
+    if (chatIframe) {
+        chatIframe.onload = function() {
+            // 読み込み完了後に少し遅らせてリサイズを促す（おまじない）
+            setTimeout(() => {
+                chatIframe.style.height = '100%';
+            }, 100);
+        };
+    }
 
     hideLoading();
 }
