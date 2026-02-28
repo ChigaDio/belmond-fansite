@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -434,7 +433,7 @@
             .video-card { flex: 0 0 320px; margin-right: 1.6rem; }
         }
         @media (max-width: 768px) {
-.TitleText { font-size: 4rem; top:30%;}
+            .TitleText { font-size: 4rem; top:30%;}
             .follower-count { font-size: 3.4rem; }
             .video-card { flex: 0 0 280px; margin-right: 1.4rem; }
             .VideoSection h2 { font-size: 2.2rem; }
@@ -445,25 +444,89 @@
             .SectionTitle { font-size: 2.2rem; }
             .inner { padding: 0 1rem; }
             .Menu ul { gap: 1rem; }
-            /* プレイヤーとサイドバーを縦並びにする */
-    .playlist-player-layout {
-        flex-direction: column; 
-    }
-
-    /* サイドバーの固定を解除して全幅にする */
-    .playlist-sidebar {
-        position: static;
-        max-width: 100%;
-        height: auto;
-    }
-
-    /* グリッドの余白をスマホ向けに調整 */
-    .video-grid {
-        gap: 1rem;
-        padding: 0;
-    }
+            
 
         }
+        /* ライブカードスタイル追加 */
+        .video-card.live { border: 2px solid #ff0000; }
+        .live-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: #ff0000; color: white; padding: 5px 10px;
+            border-radius: 50%; font-size: 0.8rem; z-index: 5;
+        }
+        .upcoming-info {
+            color: #ffcc00; font-size: 0.9rem; margin-top: 0.5rem;
+        }
+        /* マウスオーバー再生スタイル追加 */
+        .thumbnail-hidden { display: none; }
+        .preview-iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+        /* モーダルライブレイアウト追加 (test.html参考) */
+.modal-container {
+    display: flex;
+    flex-direction: row;  /* 明示的に横並び */
+    width: 100%;
+    height: 100%;
+    gap: 12px;
+    padding: 0;
+}
+
+.modal-video-section {
+    flex: 3 1 auto;  /* 左寄せを強化 */
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 100%;  /* フル高さ */
+    aspect-ratio: 16/9;  /* 動画サイズ固定 */
+}
+
+.modal-chat-section {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 380px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.modal-video-centered {
+    flex: 1 1 100%;  /* チャット閉じ時フル幅 */
+    justify-content: center;
+    
+}
+
+.modal-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;  /* 親の高さをフル確保（これが重要） */
+    gap: 12px;
+    padding: 0;
+    position: relative;  /* iframeの位置を安定させる */
+}
+
+.modal-chat-section {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 380px;
+    height: 100%;  /* 追加: 高さを親に合わせる（短い問題解決） */
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;  /* 子要素の100%を有効に */
+}
+
+.modal-chat-section iframe {
+    width: 100% !important;  /* 追加: iframeをフル幅/高さに（オーバーライド） */
+    height: 100% !important;
+    min-height: 400px;  /* 最低高さを設定（入力欄が見えるように） */
+}
     </style>
 </head>
 <body>
@@ -954,7 +1017,7 @@ async function loadPlaylistList() {
                     </div>
                 </div>
             `;
-            card.addEventListener('click', () => {
+ card.addEventListener('click', () => {
                 currentPlaylistId = pl.title.trim();
                 document.getElementById('playlistGrid').style.display = 'none';
                 document.getElementById('currentPlaylistTitle').textContent = pl.title;
@@ -1040,56 +1103,106 @@ async function loadVideos(page = 1) {
 
         currentPlaylistVideos = videos;
 
-        videos.forEach((video, index) => {
-            const date = new Date(video.published_at || video.actual_end_time || video.scheduled_start_time);
-            let playlistHtml = '';
-            if (video.playlist_titles?.length) {
-                playlistHtml = '<div class="playlist-tags">';
-                video.playlist_titles.forEach(t => playlistHtml += `<span class="playlist-tag">${t}</span>`);
-                playlistHtml += '</div>';
-            }
+videos.forEach((video, index) => {
+    const date = new Date(video.published_at || video.actual_end_time || video.scheduled_start_time);
+    let playlistHtml = '';
+    if (video.playlist_titles?.length) {
+        playlistHtml = '<div class="playlist-tags">';
+        video.playlist_titles.forEach(t => playlistHtml += `<span class="playlist-tag">${t}</span>`);
+        playlistHtml += '</div>';
+    }
 
-            const card = document.createElement('div');
-            card.className = `video-card ${currentPlayerSize}`;
-            card.innerHTML = `
-                <span class="favorite-btn ${isFavorite(video._id) ? 'active' : ''}" data-id="${video._id}">♥</span>
-                <div class="thumbnail-wrapper">
-                    <img class="thumbnail" src="${video.thumbnail_url || `https://i.ytimg.com/vi/${video._id}/maxresdefault.jpg`}" alt="${video.title}" loading="lazy">
-                </div>
-                <div class="video-info">
-                    <div class="video-title">${video.title}</div>
-                    <div class="video-meta">
-                        <span>👀 ${video.view_count.toLocaleString()}回</span>
-                        <span>❤️ ${video.like_count.toLocaleString()}</span>
-                        <span>💬 ${video.comment_count}</span>
-                        <span>${date.toLocaleDateString('ja-JP')}</span>
-                    </div>
-                    ${playlistHtml}
-                </div>
-            `;
+    let liveBadge = '';
+    let upcomingInfo = '';
+    let cardClass = `video-card ${currentPlayerSize}`;
+    if (video.live_status === 'live') {
+        cardClass += ' live';
+        liveBadge = '<div class="live-badge">LIVE Now</div>';
+    } else if (video.live_status === 'upcoming') {
+        const startTime = date.toLocaleString('ja-JP');
+        const remainingMin = Math.floor((new Date(video.published_at) - new Date()) / 60000);
+        upcomingInfo = `<div class="upcoming-info">開始予定: ${startTime} (あと${remainingMin}分)</div>`;
+    }
 
-            card.querySelector('.favorite-btn').addEventListener('click', e => {
-                e.stopPropagation();
-                toggleFavorite(video._id);
-            });
+    const card = document.createElement('div');
+    card.className = cardClass;
+    card.innerHTML = `
+        ${liveBadge}
+        <span class="favorite-btn ${isFavorite(video._id) ? 'active' : ''}" data-id="${video._id}">♥</span>
+        <div class="thumbnail-wrapper">
+            <img class="thumbnail" src="${video.thumbnail_url || `https://i.ytimg.com/vi/${video._id}/maxresdefault.jpg`}" alt="${video.title}" loading="lazy">
+            <div id="preview-${video._id}" class="preview-iframe"></div>
+        </div>
+        <div class="video-info">
+            <div class="video-title">${video.title}</div>
+            <div class="video-meta">
+                <span>👀 ${video.view_count.toLocaleString()}回</span>
+                <span>❤️ ${video.like_count.toLocaleString()}</span>
+                <span>💬 ${video.comment_count}</span>
+                <span>${date.toLocaleDateString('ja-JP')}</span>
+            </div>
+            ${playlistHtml}
+            ${upcomingInfo}
+        </div>
+    `;
 
-            card.addEventListener('click', e => {
-                if (e.target.closest('.favorite-btn')) return;
-                if (currentView === 'playlists' && currentPlaylistId) {
-                    openPlaylistPlayer(video._id, video.title, index);
-                } else {
-                    openModalPlayer(video._id, video.title);
-                }
-            });
+    card.querySelector('.favorite-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        toggleFavorite(video._id);
+    });
 
-            grid.appendChild(card);
+    card.addEventListener('click', e => {
+        if (e.target.closest('.favorite-btn')) return;
+        if (currentView === 'playlists' && currentPlaylistId) {
+            openPlaylistPlayer(video._id, video.title, index);
+        } else {
+            openModalPlayer(video._id, video.title);
+        }
+    });
+
+    // マウスオーバー自動再生追加
+    let previewPlayer;
+    card.addEventListener('mouseenter', () => {
+        // 既存のプレイヤーがあれば安全に破棄（高速移動時の残存対策）
+        if (previewPlayer && typeof previewPlayer.destroy === 'function') {
+            previewPlayer.destroy();
+            previewPlayer = null;
+        }
+        const thumbnail = card.querySelector('.thumbnail');
+        thumbnail.classList.add('thumbnail-hidden');
+        previewPlayer = new YT.Player(`preview-${video._id}`, {
+            height: '100%',
+            width: '100%',
+            videoId: video._id,
+            playerVars: { autoplay: 1, mute: 1, rel: 0, modestbranding: 1 },
         });
+    });
+
+    card.addEventListener('mouseleave', () => {
+        if (previewPlayer && typeof previewPlayer.stopVideo === 'function') {
+            previewPlayer.stopVideo();
+        }
+        if (previewPlayer && typeof previewPlayer.destroy === 'function') {
+            previewPlayer.destroy();
+        }
+        previewPlayer = null;
+        const thumbnail = card.querySelector('.thumbnail');
+        thumbnail.classList.remove('thumbnail-hidden');
+        document.getElementById(`preview-${video._id}`).innerHTML = '';
+    });
+
+    grid.appendChild(card);
+});
 
         if (currentView === 'playlists' && currentPlaylistId && videos.length > 0) {
             openPlaylistPlayer(videos[0]._id, videos[0].title, 0);
         } else if (currentView !== 'playlists') {
             renderSmartPagination(data.currentPage || 1, data.totalPages || 1);
         }
+
+        // upcoming残り時間動的更新追加
+        updateUpcomingTimes();
+        setInterval(updateUpcomingTimes, 60000); // 毎分更新
 
     } catch (err) {
         console.error(err);
@@ -1160,8 +1273,56 @@ async function openPlaylistPlayer(videoId, title, index) {
         console.error('KPI情報 動画カウント失敗', err);
     }
 
+    // ライブチェック追加
+    const video = currentPlaylistVideos.find(v => v._id === videoId) || favorites.find(v => v._id === videoId);
+    let isLive = video && video.live_status === 'live';
+    isLive = true; // テスト用に常にライブとする
     document.getElementById('videoModal').style.display = 'flex';
-    document.getElementById('modalPlayerContainer').innerHTML = '<div id="modalYoutubePlayer"></div>';
+    const modalContent = document.querySelector('.modal-content');
+if (isLive) {
+    modalContent.innerHTML = `
+        <div class="modal-container">
+            <div class="modal-video-section modal-video-centered">
+                <div id="modalYoutubePlayer" style="width:100%; height:100%;"></div>
+            </div>
+            <div class="modal-chat-section" style="display: flex;">  <!-- テスト用にflexに変更（チャットが出るように） -->
+                <div class="modal-chat-header">LIVE CHAT REPLAY</div>
+                <iframe id="modalChatIframe" src="https://www.youtube.com/live_chat?v=xq3gDVLRdZo&embed_domain=belmond-fansite.vercel.app&dark_theme=1" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+        <span id="closeModal" class="close-btn" onclick="document.getElementById('videoModal').style.display='none'; if(modalPlayer){modalPlayer.destroy();modalPlayer=null;}">×</span>
+        <button id="modalHamburger" class="hamburger-btn">☰</button>
+        <div id="modalHamburgerMenu" class="hamburger-menu">
+            <button onclick="cycleModalSize()">サイズ変更</button>
+            <button onclick="toggleModalLoop()">ループ <span id="modalLoopStatus">OFF</span></button>
+            <button onclick="moveToLeftPlayer()">左固定へ</button>
+            <button onclick="toggleModalChat()">Toggle Chat</button>
+        </div>
+    `;
+    // イベント再バインド（ここを追加）
+    const modalHamburger = document.getElementById('modalHamburger');
+    const modalMenu = document.getElementById('modalHamburgerMenu');
+    modalHamburger.addEventListener('click', e => {
+        e.stopImmediatePropagation();
+        const wasVisible = modalMenu.style.display === 'block';
+        closeAllMenus();
+        if (!wasVisible) modalMenu.style.display = 'block';
+    });
+} else {
+        // 非ライブ時は元通り
+        modalContent.innerHTML = `
+            <div class="modal-player">
+                <div id="modalYoutubePlayer"></div>
+            </div>
+            <span id="closeModal" class="close-btn" onclick="document.getElementById('videoModal').style.display='none'; if(modalPlayer){modalPlayer.destroy();modalPlayer=null;}">×</span>
+            <button id="modalHamburger" class="hamburger-btn">☰</button>
+            <div id="modalHamburgerMenu" class="hamburger-menu">
+                <button onclick="cycleModalSize()">サイズ変更</button>
+                <button onclick="toggleModalLoop()">ループ <span id="modalLoopStatus">OFF</span></button>
+                <button onclick="moveToLeftPlayer()">左固定へ</button>
+            </div>
+        `;
+    }
 
     modalPlayer = new YT.Player('modalYoutubePlayer', {
         height: '100%',
@@ -1588,6 +1749,40 @@ window.addEventListener('load', () => {
     document.getElementById('autoNextToggle').addEventListener('change', e => autoNextEnabled = e.target.checked);
     document.getElementById('playlistLoopToggle').addEventListener('change', e => playlistLoopEnabled = e.target.checked);
 });
+
+// upcoming残り時間更新関数追加
+function updateUpcomingTimes() {
+    document.querySelectorAll('.upcoming-info').forEach(info => {
+        const card = info.closest('.video-card');
+        const videoId = card.querySelector('.favorite-btn').dataset.id;
+        const video = currentPlaylistVideos.find(v => v._id === videoId);
+        if (video) {
+            if(video.live_status === 'live') {
+                info.innerHTML = `LIVE Now<br>開始: ${new Date(video.scheduled_start_time).toLocaleString('ja-JP')}`;
+                return;
+            }
+            else if(video.live_status === 'upcoming')
+            {
+                const remainingMin = Math.floor((new Date(video.scheduled_start_time) - new Date()) / 60000);
+                info.innerHTML = `開始予定: ${new Date(video.scheduled_start_time).toLocaleString('ja-JP')}<br>(あと${remainingMin}分)`;
+            }
+        }
+    });
+}
+
+// モーダルチャットトグル関数追加
+function toggleModalChat() {
+    const chatSection = document.querySelector('.modal-chat-section');
+    const videoSection = document.querySelector('.modal-video-section');
+    if (chatSection.style.display === 'none') {
+        chatSection.style.display = 'flex';
+        videoSection.classList.remove('modal-video-centered');
+        videoSection.style.justifyContent = 'flex-start';  // 追加: 明示的に左寄せ
+    } else {
+        chatSection.style.display = 'none';
+        videoSection.classList.add('modal-video-centered');
+    }
+}
 </script>
 </body>
 </html>
