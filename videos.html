@@ -1275,7 +1275,7 @@ async function openPlaylistPlayer(videoId, title, index) {
 
     // ライブチェック追加
     const video = currentPlaylistVideos.find(v => v._id === videoId) || favorites.find(v => v._id === videoId);
-    let isLive = video && video.live_status === 'live';
+    let isLive = video && (video.live_status === 'live' || video.live_status === 'upcoming');
     document.getElementById('videoModal').style.display = 'flex';
     const modalContent = document.querySelector('.modal-content');
 if (isLive) {

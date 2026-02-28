@@ -241,6 +241,9 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                 stats = item.get("statistics", {})
                 live = item.get("liveStreamingDetails", {})
                 content = item.get("contentDetails", {})
+                
+
+                    
 
                 published_at = None
                 if pub_str := snip.get("publishedAt"):
@@ -265,8 +268,6 @@ def get_youtube_data(findData: YoutubeDataFind) -> tuple[YoutubeUser,List[Youtub
                     sched_start = act_start
                 if not published_at:
                     published_at = act_start
-                if sched_start and act_start and sched_start > act_start:
-                    sched_start = sched_start.replace(year=act_start.year)
                 if "actualEndTime" in live:
                     act_end = datetime.fromisoformat(live["actualEndTime"].replace("Z", "+00:00")).astimezone(jst)
                     published_at = act_end
