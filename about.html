@@ -287,6 +287,25 @@
 </footer>
 
 <script>
+
+    let siteTitle = document.querySelector('.site-title');
+let titleText = document.querySelector('.TitleText');
+let siteStartFontSize = parseFloat(getComputedStyle(siteTitle).fontSize);
+let titleStartFontSize = parseFloat(getComputedStyle(titleText).fontSize);
+window.addEventListener('resize', function() {
+    const windowWidth = window.innerWidth;
+
+    if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
+});
     window.addEventListener('scroll', () => {
         const header = document.getElementById('site-header');
         header.classList.toggle('scrolled', window.scrollY > 50);
@@ -331,6 +350,17 @@
     }
 }
 window.addEventListener('load', () => {
+    const windowWidth = window.innerWidth;
+        if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
     loadFollowerCount();
 });
 </script>

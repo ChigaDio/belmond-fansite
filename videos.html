@@ -30,20 +30,20 @@
             min-height: 100vh;
         }
         header {
-            position: fixed; top:0; left:0; width:100%; z-index:1000;
-            background: rgba(104,61,70,0.88);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(201,168,181,0.15);
-            transition: all 0.3s;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: rgba(104, 61, 70, 0.88);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(201, 168, 181, 0.15);
+            transition: all 0.3s ease;
         }
-        header.scrolled { padding:0.6rem 0; background:rgba(74,43,50,0.94); }
-        .inner { max-width:1200px; margin:0 auto; padding:0 2rem; display:flex; justify-content:space-between; align-items:center; height:80px; }
-        .site-title { font-size:1.9rem; font-weight:700; color:var(--light-accent); letter-spacing:1px; }
-        .Menu ul { list-style:none; display:flex; gap:2.5rem; }
-        .Menu li a { text-decoration:none; color:var(--text-sub); font-size:1.1rem; position:relative; transition:0.3s; }
-        .Menu li a:hover, .Menu li a.active { color:#fff; }
-        .Menu li a::after { content:""; position:absolute; width:0; height:2px; bottom:-4px; left:50%; background:var(--accent); transition:0.3s; transform:translateX(-50%); }
-        .Menu li a.active::after { width:80%; }
+        header.scrolled { padding: 0.6rem 0; background: rgba(74, 43, 50, 0.94); }
+        .inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; height: 80px; }
+        .site-title { font-size: 1.9rem; font-weight: 700; color: var(--light-accent); letter-spacing: 1px; }
+        .Menu ul { list-style: none; display: flex; gap: 2.5rem; }
+        .Menu li a { text-decoration: none; color: var(--text-sub); font-size: 1.1rem; position: relative; transition: 0.3s; }
+        .Menu li a:hover, .Menu li a.active { color: #fff; }
+        .Menu li a::after { content: ""; position: absolute; width: 0; height: 2px; bottom: -4px; left: 50%; background: var(--accent); transition: 0.3s; transform: translateX(-50%); }
+        .Menu li a.active::after { width: 80%; }
         main { padding-top:100px; }
 
         .CharacterBox {
@@ -364,24 +364,19 @@
             right: -10px; /* 左寄せ時でもメニューが飛び出せるよう調整 */
         }
 
-        @media (max-width:1024px) {
-            .playlist-player-layout { flex-direction:column; gap:2.5rem; }
-            .playlist-sidebar { max-width:none; height:500px; }
-            .playlist-main-player.large, .playlist-main-player.medium, .playlist-main-player.small { width:100% !important; max-width:none !important; }
-            .video-grid { grid-template-columns:repeat(3, minmax(300px,1fr)); gap:2rem; }
-            .modal-content { height:60vh; }
+        @media (max-width: 1024px) {
+            .video-card { flex: 0 0 320px; margin-right: 1.6rem; }
         }
-        @media (max-width:768px) {
-            .tab-nav { gap:1.5rem; flex-wrap:wrap; }
-            .controls { flex-direction:column; align-items:stretch; }
-            .video-grid { grid-template-columns:repeat(2, minmax(280px,1fr)); gap:1.8rem; }
-            .modal-content { height:50vh; }
+        @media (max-width: 768px) {
+            .TitleText { font-size: 4rem; }
+            .follower-count { font-size: 3.4rem; }
+            .video-card { flex: 0 0 280px; margin-right: 1.4rem; }
+            .VideoSection h2 { font-size: 2.2rem; }
         }
-        @media (max-width:560px) {
-            .video-grid { grid-template-columns:1fr; gap:2rem; }
-            .TitleText { font-size:3.8rem; }
-            .follower-count { font-size:3rem; }
-            .modal-content { height:40vh; }
+        @media (max-width: 768px) {
+            .SectionTitle { font-size: 2.2rem; }
+            .inner { padding: 0 1rem; }
+            .Menu ul { gap: 1rem; }
         }
     </style>
 </head>
@@ -560,8 +555,24 @@ let windowWidth = window.innerWidth;
 function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
 function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
+
+let siteTitle = document.querySelector('.site-title');
+let titleText = document.querySelector('.TitleText');
+let siteStartFontSize = parseFloat(getComputedStyle(siteTitle).fontSize);
+let titleStartFontSize = parseFloat(getComputedStyle(titleText).fontSize);
 window.addEventListener('resize', function() {
     windowWidth = window.innerWidth;
+
+    if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
 });
 
 function countUp(element, target, duration = 2800) {
@@ -1330,6 +1341,18 @@ function makeLeftPlayerDraggable() {
 
 // 初期化
 window.addEventListener('load', () => {
+
+    if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
+
     loadFollowerCount();
     loadPlaylists();
     switchTab('search');
