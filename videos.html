@@ -30,20 +30,20 @@
             min-height: 100vh;
         }
         header {
-            position: fixed; top:0; left:0; width:100%; z-index:1000;
-            background: rgba(104,61,70,0.88);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(201,168,181,0.15);
-            transition: all 0.3s;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: rgba(104, 61, 70, 0.88);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(201, 168, 181, 0.15);
+            transition: all 0.3s ease;
         }
-        header.scrolled { padding:0.6rem 0; background:rgba(74,43,50,0.94); }
-        .inner { max-width:1200px; margin:0 auto; padding:0 2rem; display:flex; justify-content:space-between; align-items:center; height:80px; }
-        .site-title { font-size:1.9rem; font-weight:700; color:var(--light-accent); letter-spacing:1px; }
-        .Menu ul { list-style:none; display:flex; gap:2.5rem; }
-        .Menu li a { text-decoration:none; color:var(--text-sub); font-size:1.1rem; position:relative; transition:0.3s; }
-        .Menu li a:hover, .Menu li a.active { color:#fff; }
-        .Menu li a::after { content:""; position:absolute; width:0; height:2px; bottom:-4px; left:50%; background:var(--accent); transition:0.3s; transform:translateX(-50%); }
-        .Menu li a.active::after { width:80%; }
+        header.scrolled { padding: 0.6rem 0; background: rgba(74, 43, 50, 0.94); }
+        .inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; height: 80px; }
+        .site-title { font-size: 1.9rem; font-weight: 700; color: var(--light-accent); letter-spacing: 1px; }
+        .Menu ul { list-style: none; display: flex; gap: 2.5rem; }
+        .Menu li a { text-decoration: none; color: var(--text-sub); font-size: 1.1rem; position: relative; transition: 0.3s; }
+        .Menu li a:hover, .Menu li a.active { color: #fff; }
+        .Menu li a::after { content: ""; position: absolute; width: 0; height: 2px; bottom: -4px; left: 50%; background: var(--accent); transition: 0.3s; transform: translateX(-50%); }
+        .Menu li a.active::after { width: 80%; }
         main { padding-top:100px; }
 
         .CharacterBox {
@@ -56,7 +56,12 @@
         .CharacterBackground {
             position:absolute; right:0; top:170%; transform:translateY(-50%) scale(3.5);
             height:100%; width:auto; z-index:1; object-fit:contain;
+            transition: opacity 1s ease-in-out; /* フェード用 */
         }
+        .CharacterBackground.fade-out {
+            opacity: 0;
+        }
+        
         .TitleText {
             position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
             font-family:"Kaisei Opti"; color:white; z-index:3;
@@ -70,6 +75,68 @@
         .follower-count { font-family:"DotGothic16",sans-serif; font-size:4.2rem; line-height:1; color:#ffffff; display:inline-block; }
         .follower-unit { font-family:"DotGothic16",sans-serif; font-size:2.1rem; color:var(--accent); vertical-align:middle; margin-left:0.25rem; }
         .last-updated { font-family:"Kaisei Opti",serif; font-size:1rem; color:rgba(255,255,255,0.8); margin-top:0.5rem; }
+
+        /* 作者情報表示エリア */
+        .author-info {
+            position: absolute;
+            top: 70%; /* 調整可能 */
+            right: 2%; /* 背景画像の上に配置、調整可能 */
+            z-index: 3;
+            background: rgba(37, 22, 28, 0.75); /* 半透明背景でおしゃれに */
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            text-align: right;
+            opacity: 1;
+            transition: opacity 1s ease-in-out; /* フェード用 */
+            max-width: 300px;
+        }
+        .author-info.fade-out {
+            opacity: 0;
+        }
+        .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        .author-profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px var(--shadow);
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .author-profile-img:hover {
+            transform: scale(1.1);
+        }
+        .author-details {
+            text-align: right;
+        }
+        .author-name {
+            font-weight: 700;
+            color: var(--light-accent);
+            margin-bottom: 0.3rem;
+        }
+        .author-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s;
+        }
+        .author-link:hover {
+            color: #fff;
+        }
+        .author-link::before {
+            content: "@";
+            font-family: "DotGothic16", sans-serif;
+            color: var(--text-sub);
+        }
 
         .VideoSection { max-width:100%; margin:4rem auto; padding:0 2rem; }
         .VideoSection h2 { font-size:2.9rem; text-align:center; margin-bottom:1.8rem; color:var(--light-accent); text-shadow:0 2px 12px var(--shadow); }
@@ -364,24 +431,22 @@
             right: -10px; /* 左寄せ時でもメニューが飛び出せるよう調整 */
         }
 
-        @media (max-width:1024px) {
-            .playlist-player-layout { flex-direction:column; gap:2.5rem; }
-            .playlist-sidebar { max-width:none; height:500px; }
-            .playlist-main-player.large, .playlist-main-player.medium, .playlist-main-player.small { width:100% !important; max-width:none !important; }
-            .video-grid { grid-template-columns:repeat(3, minmax(300px,1fr)); gap:2rem; }
-            .modal-content { height:60vh; }
+        @media (max-width: 1024px) {
+            .video-card { flex: 0 0 320px; margin-right: 1.6rem; }
         }
-        @media (max-width:768px) {
-            .tab-nav { gap:1.5rem; flex-wrap:wrap; }
-            .controls { flex-direction:column; align-items:stretch; }
-            .video-grid { grid-template-columns:repeat(2, minmax(280px,1fr)); gap:1.8rem; }
-            .modal-content { height:50vh; }
+        @media (max-width: 768px) {
+.TitleText { font-size: 4rem; top:30%;}
+            .follower-count { font-size: 3.4rem; }
+            .video-card { flex: 0 0 280px; margin-right: 1.4rem; }
+            .VideoSection h2 { font-size: 2.2rem; }
+            .author-info {right: 5%; font-size: 1rem; padding: 0.8rem 1.2rem; }
+            .author-profile-img { width: 32px; height: 32px; }
         }
-        @media (max-width:560px) {
-            .video-grid { grid-template-columns:1fr; gap:2rem; }
-            .TitleText { font-size:3.8rem; }
-            .follower-count { font-size:3rem; }
-            .modal-content { height:40vh; }
+        @media (max-width: 768px) {
+            .SectionTitle { font-size: 2.2rem; }
+            .inner { padding: 0 1rem; }
+            .Menu ul { gap: 1rem; }
+
         }
     </style>
 </head>
@@ -411,7 +476,18 @@
             </div>
             <div class="last-updated" id="lastUpdated">データ取得中...</div>
         </div>
-        <!--<img class="CharacterBackground" src="./assets/Background.png" alt="Belmond">-->
+        <img class="CharacterBackground" src="" alt = "" onerror="this.onerror = null; this.src='';">
+
+        <!-- 作者情報表示 -->
+        <div class="author-info" id="authorInfo">
+            <div class="author-profile">
+                <div class="author-details">
+                    <div class="author-name" id="authorName"></div>
+                    <a href="#" class="author-link" id="authorLink" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+                <img class="author-profile-img" id="authorProfileImg" src="" alt="Author Profile">
+            </div>
+        </div>
     </div>
 
     <section class="VideoSection">
@@ -560,8 +636,24 @@ let windowWidth = window.innerWidth;
 function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
 function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
+
+let siteTitle = document.querySelector('.site-title');
+let titleText = document.querySelector('.TitleText');
+let siteStartFontSize = parseFloat(getComputedStyle(siteTitle).fontSize);
+let titleStartFontSize = parseFloat(getComputedStyle(titleText).fontSize);
 window.addEventListener('resize', function() {
     windowWidth = window.innerWidth;
+
+    if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
 });
 
 function countUp(element, target, duration = 2800) {
@@ -683,15 +775,6 @@ searchInput.addEventListener('beforeinput', e => {
         }
     }
 });
-
-function addTagAndClear() {
-    const val = searchInput.value.trim();
-    if (val && !currentSearchTags.includes(val)) {
-        currentSearchTags.push(val);
-        renderTags();
-    }
-    searchInput.value = '';
-}
 
 function addTagAndClear() {
     const val = searchInput.value.trim();
@@ -1328,12 +1411,120 @@ function makeLeftPlayerDraggable() {
     });
 }
 
+// 新機能: 背景画像と作者情報のランダム選択と定期切り替え
+let backgroundData = []; // APIから取得したデータ配列
+let currentIndex = -1;
+const switchInterval = 10000; // 切り替え間隔 (10秒)
+let switchTimer;
+
+async function loadBackgroundData() {
+    try {
+        // APIエンドポイント
+        const response = await fetch('https://belmond-fansite.vercel.app/api/backgroundsApi');
+        if (!response.ok) throw new Error('背景APIエラー');
+        backgroundData = await response.json(); // 配列形式で [{authorName, authorId, authorLink, imageUrl, localAssetPath, positionX, positionY, scale, authorProfileImage}]
+
+        if (backgroundData.length > 0) {
+            // 初回はランダム選択して即表示（フェードなし）
+            initialDisplay();
+            
+            // データが複数ならタイマー開始（順番切り替え）
+            if (backgroundData.length > 1) {
+                switchTimer = setInterval(switchBackground, switchInterval);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        // エラーの場合、デフォルト画像のまま
+    }
+}
+
+function getRandomIndex() {
+    return Math.floor(Math.random() * backgroundData.length);
+}
+
+function getNextSequentialIndex() {
+    currentIndex = (currentIndex + 1) % backgroundData.length;
+    return currentIndex;
+}
+
+function initialDisplay() {
+    const bgElement = document.querySelector('.CharacterBackground');
+    const authorInfo = document.getElementById('authorInfo');
+    const authorName = document.getElementById('authorName');
+    const authorLink = document.getElementById('authorLink');
+    const authorProfileImg = document.getElementById('authorProfileImg');
+
+    // 初回はランダム選択（データ1つでもOK）
+    currentIndex = getRandomIndex();
+    const data = backgroundData[currentIndex];
+
+    // 即表示（opacity=1でフェードクラスなし）
+    bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
+    bgElement.style.right = `${data.positionX}%`;
+    bgElement.style.top = `${data.positionY}%`;
+    bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+    bgElement.style.opacity = '1'; // 明示的に1
+
+    authorName.textContent = "画像作者: " + data.authorName + "様";
+    authorLink.textContent = data.authorId;
+    authorLink.href = data.authorLink;
+    authorProfileImg.src = data.authorProfileImage;
+    authorInfo.style.opacity = '1'; // 明示的に1
+}
+
+function switchBackground() {
+    const bgElement = document.querySelector('.CharacterBackground');
+    const authorInfo = document.getElementById('authorInfo');
+    const authorName = document.getElementById('authorName');
+    const authorLink = document.getElementById('authorLink');
+    const authorProfileImg = document.getElementById('authorProfileImg');
+
+    // フェードアウト（データ1つならここに来ない）
+    bgElement.classList.add('fade-out');
+    authorInfo.classList.add('fade-out');
+
+    setTimeout(() => {
+        // 次を順番に選択（連続同じは自然に避けられる）
+        currentIndex = getNextSequentialIndex();
+        const data = backgroundData[currentIndex];
+
+        // 更新
+        bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
+        bgElement.style.right = `${data.positionX}%`;
+        bgElement.style.top = `${data.positionY}%`;
+        bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+
+        authorName.textContent = "画像作者: " + data.authorName + "様";
+        authorLink.textContent = data.authorId;
+        authorLink.href = data.authorLink;
+        authorProfileImg.src = data.authorProfileImage;
+
+        // フェードイン
+        bgElement.classList.remove('fade-out');
+        authorInfo.classList.remove('fade-out');
+    }, 1000); // フェードアウト時間と同期
+}
+
 // 初期化
 window.addEventListener('load', () => {
+
+    if(windowWidth < window.screen.width * 0.3)
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
+        titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
+    }
+    else
+    {
+        siteTitle.style.fontSize = `${siteStartFontSize}px`;
+        titleText.style.fontSize = `${titleStartFontSize}px`;
+    }
+
     loadFollowerCount();
     loadPlaylists();
     switchTab('search');
     makeLeftPlayerDraggable();
+    loadBackgroundData(); // 新しい機能のロード
 
     document.getElementById('tab-search').addEventListener('click', e => { e.preventDefault(); switchTab('search'); });
     document.getElementById('tab-favorites').addEventListener('click', e => { e.preventDefault(); switchTab('favorites'); });
