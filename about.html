@@ -50,7 +50,7 @@
         }
 
         .SectionTitle {
-            font-size: 3rem; text-align: center; margin-bottom: 4rem; color: var(--light-accent);
+            font-size: 3rem; text-align: center; margin-bottom: 1rem; color: var(--light-accent);
             text-shadow: 0 4px 15px var(--shadow); position: relative;
         }
         .SectionTitle::after {
@@ -135,19 +135,16 @@
             width: auto;
             z-index: 1;
             object-fit: contain;
+            transition: opacity 1s ease-in-out; /* フェード用 */
         }
+        .CharacterBackground.fade-out {
+            opacity: 0;
+        }
+        
         .TitleText {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: "Kaisei Opti";
-            color: white;
-            z-index: 3;
-            font-size: 5.5rem;
-            font-weight: 700;
-            text-shadow: 0 4px 30px var(--shadow);
-            letter-spacing: 2px;
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            font-family:"Kaisei Opti"; color:white; z-index:3;
+            font-size:5.5rem; font-weight:700; text-shadow:0 4px 30px var(--shadow); letter-spacing:2px;
         }
 
         .follower-wrap {
@@ -186,6 +183,84 @@
             color: rgba(255,255,255,0.8);
             margin-top: 0.5rem;
         }
+        
+        /* 作者情報表示エリア */
+        .author-info {
+            position: absolute;
+            top: 70%; /* 調整可能 */
+            right: 2%; /* 背景画像の上に配置、調整可能 */
+            z-index: 3;
+            background: rgba(37, 22, 28, 0.75); /* 半透明背景でおしゃれに */
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            text-align: right;
+            opacity: 1;
+            transition: opacity 1s ease-in-out; /* フェード用 */
+            max-width: 300px;
+        }
+        .author-info.fade-out {
+            opacity: 0;
+        }
+        .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        .author-profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px var(--shadow);
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .author-profile-img:hover {
+            transform: scale(1.1);
+        }
+        .author-details {
+            text-align: right;
+        }
+        .author-name {
+            font-weight: 700;
+            color: var(--light-accent);
+            margin-bottom: 0.3rem;
+        }
+        .author-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s;
+        }
+        .author-link:hover {
+            color: #fff;
+        }
+        .author-link::before {
+            content: "@";
+            font-family: "DotGothic16", sans-serif;
+            color: var(--text-sub);
+        }
+
+        @media (max-width: 1024px) {
+
+        }
+        @media (max-width: 768px) {
+            .TitleText { font-size: 4rem; top:30%;}
+            .follower-count { font-size: 3.4rem; }
+            .author-info {right: 5%; font-size: 1rem; padding: 0.8rem 1.2rem; }
+            .author-profile-img { width: 32px; height: 32px; }
+        }
+        @media (max-width: 768px) {
+            .SectionTitle { font-size: 2.2rem; }
+            .inner { padding: 0 1rem; }
+            .Menu ul { gap: 1rem; }
+
+        }
     </style>
 </head>
 <body>
@@ -218,7 +293,18 @@
             <div class="last-updated" id="lastUpdated">データ取得中...</div>
         </div>
 
-        <!--<img class="CharacterBackground" src="./assets/Background.png" alt="Belmond">-->
+        <img class="CharacterBackground" src=""   alt = "" onerror="this.onerror = null; this.src='';">
+        
+        <!-- 作者情報表示 -->
+        <div class="author-info" id="authorInfo">
+            <div class="author-profile">
+                <div class="author-details">
+                    <div class="author-name" id="authorName"></div>
+                    <a href="#" class="author-link" id="authorLink" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+                <img class="author-profile-img" id="authorProfileImg" src="" alt="Author Profile">
+            </div>
+        </div>
     </div>
 
     <div class="ProfileGrid">
@@ -349,6 +435,102 @@ window.addEventListener('resize', function() {
         document.getElementById('lastUpdated').textContent = '取得に失敗しました';
     }
 }
+
+// 新機能: 背景画像と作者情報のランダム選択と定期切り替え
+let backgroundData = []; // APIから取得したデータ配列
+let currentIndex = -1;
+const switchInterval = 10000; // 切り替え間隔 (10秒)
+let switchTimer;
+
+async function loadBackgroundData() {
+    try {
+        // APIエンドポイント
+        const response = await fetch('https://belmond-fansite.vercel.app/api/backgroundsApi');
+        if (!response.ok) throw new Error('背景APIエラー');
+        backgroundData = await response.json(); // 配列形式で [{authorName, authorId, authorLink, imageUrl, localAssetPath, positionX, positionY, scale, authorProfileImage}]
+
+        if (backgroundData.length > 0) {
+            // 初回はランダム選択して即表示（フェードなし）
+            initialDisplay();
+            
+            // データが複数ならタイマー開始（順番切り替え）
+            if (backgroundData.length > 1) {
+                switchTimer = setInterval(switchBackground, switchInterval);
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        // エラーの場合、デフォルト画像のまま
+    }
+}
+
+function getRandomIndex() {
+    return Math.floor(Math.random() * backgroundData.length);
+}
+
+function getNextSequentialIndex() {
+    currentIndex = (currentIndex + 1) % backgroundData.length;
+    return currentIndex;
+}
+
+function initialDisplay() {
+    const bgElement = document.querySelector('.CharacterBackground');
+    const authorInfo = document.getElementById('authorInfo');
+    const authorName = document.getElementById('authorName');
+    const authorLink = document.getElementById('authorLink');
+    const authorProfileImg = document.getElementById('authorProfileImg');
+
+    // 初回はランダム選択（データ1つでもOK）
+    currentIndex = getRandomIndex();
+    const data = backgroundData[currentIndex];
+
+    // 即表示（opacity=1でフェードクラスなし）
+    bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
+    bgElement.style.right = `${data.positionX}%`;
+    bgElement.style.top = `${data.positionY}%`;
+    bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+    bgElement.style.opacity = '1'; // 明示的に1
+
+    authorName.textContent = "画像作者: " + data.authorName + "様";
+    authorLink.textContent = data.authorId;
+    authorLink.href = data.authorLink;
+    authorProfileImg.src = data.authorProfileImage;
+    authorInfo.style.opacity = '1'; // 明示的に1
+}
+
+function switchBackground() {
+    const bgElement = document.querySelector('.CharacterBackground');
+    const authorInfo = document.getElementById('authorInfo');
+    const authorName = document.getElementById('authorName');
+    const authorLink = document.getElementById('authorLink');
+    const authorProfileImg = document.getElementById('authorProfileImg');
+
+    // フェードアウト（データ1つならここに来ない）
+    bgElement.classList.add('fade-out');
+    authorInfo.classList.add('fade-out');
+
+    setTimeout(() => {
+        // 次を順番に選択（連続同じは自然に避けられる）
+        currentIndex = getNextSequentialIndex();
+        const data = backgroundData[currentIndex];
+
+        // 更新
+        bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
+        bgElement.style.right = `${data.positionX}%`;
+        bgElement.style.top = `${data.positionY}%`;
+        bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+
+        authorName.textContent = "画像作者: " + data.authorName + "様";
+        authorLink.textContent = data.authorId;
+        authorLink.href = data.authorLink;
+        authorProfileImg.src = data.authorProfileImage;
+
+        // フェードイン
+        bgElement.classList.remove('fade-out');
+        authorInfo.classList.remove('fade-out');
+    }, 1000); // フェードアウト時間と同期
+}
+
 window.addEventListener('load', () => {
     const windowWidth = window.innerWidth;
         if(windowWidth < window.screen.width * 0.3)
@@ -362,6 +544,7 @@ window.addEventListener('load', () => {
         titleText.style.fontSize = `${titleStartFontSize}px`;
     }
     loadFollowerCount();
+    loadBackgroundData();
 });
 </script>
 
