@@ -241,9 +241,8 @@
         /* 検索・お気に入りグリッド */
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(310px, 1fr));
-            gap: 2.6rem;
-            align-items: center;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 300pxを下回ると自動で下の段へ */
+            gap: 1.5rem; /* スマホだと2.6remは広すぎるので少し詰めると綺麗です */
             justify-content: center;
         }
 
@@ -446,6 +445,23 @@
             .SectionTitle { font-size: 2.2rem; }
             .inner { padding: 0 1rem; }
             .Menu ul { gap: 1rem; }
+            /* プレイヤーとサイドバーを縦並びにする */
+    .playlist-player-layout {
+        flex-direction: column; 
+    }
+
+    /* サイドバーの固定を解除して全幅にする */
+    .playlist-sidebar {
+        position: static;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* グリッドの余白をスマホ向けに調整 */
+    .video-grid {
+        gap: 1rem;
+        padding: 0;
+    }
 
         }
     </style>
