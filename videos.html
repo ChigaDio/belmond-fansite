@@ -1287,7 +1287,13 @@ if (isLive) {
             </div>
             <div class="modal-chat-section" style="display: flex;">  <!-- テスト用にflexに変更（チャットが出るように） -->
                 <div class="modal-chat-header">LIVE CHAT REPLAY</div>
-                <iframe id="modalChatIframe" src="https://www.youtube.com/live_chat?v=xq3gDVLRdZo&embed_domain=belmond-fansite.vercel.app&dark_theme=1" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<iframe 
+  id="modalChatIframe"
+  width="100%" 
+  height="500" 
+  src="https://www.youtube.com/live_chat?v=xq3gDVLRdZo&embed_domain=belmond-fansite.vercel.app&dark_theme=1"
+  frameborder="0">
+</iframe>
             </div>
         </div>
         <span id="closeModal" class="close-btn" onclick="document.getElementById('videoModal').style.display='none'; if(modalPlayer){modalPlayer.destroy();modalPlayer=null;}">×</span>
