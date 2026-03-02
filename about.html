@@ -187,19 +187,21 @@
         /* 作者情報表示エリア */
         .author-info {
             position: absolute;
-            top: 70%; /* 調整可能 */
-            right: 2%; /* 背景画像の上に配置、調整可能 */
+            top: 80%; /* 調整可能 */
+            right: 0; /* 背景画像の上に配置、調整可能 */
             z-index: 3;
             background: rgba(37, 22, 28, 0.75); /* 半透明背景でおしゃれに */
             border-radius: 12px;
-            padding: 1rem 1.5rem;
+            padding: 0rem 1.5rem;
             box-shadow: 0 4px 20px var(--shadow);
             color: var(--text-main);
             font-size: 1.1rem;
-            text-align: right;
+            text-align: right ;
             opacity: 1;
             transition: opacity 1s ease-in-out; /* フェード用 */
             max-width: 300px;
+            flex-wrap: wrap;
+            scale: 0.8;  
         }
         .author-info.fade-out {
             opacity: 0;
@@ -484,11 +486,16 @@ function initialDisplay() {
     currentIndex = getRandomIndex();
     const data = backgroundData[currentIndex];
 
+    let translateX = 0.0;
+    if("translateX" in data)
+    {
+        translateX = data.translateX;
+    }
     // 即表示（opacity=1でフェードクラスなし）
     bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
     bgElement.style.right = `${data.positionX}%`;
     bgElement.style.top = `${data.positionY}%`;
-    bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+    bgElement.style.transform = `translateX(${translateX}%) translateY(-50%) scale(${data.scale})`;
     bgElement.style.opacity = '1'; // 明示的に1
 
     authorName.textContent = "画像作者: " + data.authorName + "様";
@@ -514,11 +521,17 @@ function switchBackground() {
         currentIndex = getNextSequentialIndex();
         const data = backgroundData[currentIndex];
 
+        let translateX = 0.0;
+        if("translateX" in data)        {
+            translateX = data.translateX;
+        }
+
         // 更新
+        
         bgElement.src = "./assets/" + (data.localAssetPath || data.imageUrl);
         bgElement.style.right = `${data.positionX}%`;
         bgElement.style.top = `${data.positionY}%`;
-        bgElement.style.transform = `translateY(-50%) scale(${data.scale})`;
+        bgElement.style.transform = `translateX(${translateX}%) translateY(-50%) scale(${data.scale})`;
 
         authorName.textContent = "画像作者: " + data.authorName + "様";
         authorLink.textContent = data.authorId;
