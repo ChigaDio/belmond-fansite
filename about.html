@@ -381,7 +381,7 @@ let titleStartFontSize = parseFloat(getComputedStyle(titleText).fontSize);
 window.addEventListener('resize', function() {
     const windowWidth = window.innerWidth;
 
-    if(windowWidth < window.screen.width * 0.3)
+    if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
     {
         siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
         titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
@@ -533,7 +533,7 @@ function switchBackground() {
 
 window.addEventListener('load', () => {
     const windowWidth = window.innerWidth;
-        if(windowWidth < window.screen.width * 0.3)
+        if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
     {
         siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
         titleText.style.fontSize = `${titleStartFontSize * 0.5}px`;
