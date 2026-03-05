@@ -1,7 +1,7 @@
 // quizAPI.js（これで解答送信エラーは完全消滅）
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB;
+const uri = process.env.DB_COUNT;
 const client = new MongoClient(uri);
 const DB_NAME = 'belmond_fan_data';
 
