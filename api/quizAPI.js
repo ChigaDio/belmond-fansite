@@ -53,7 +53,6 @@ export default async function handler(req, res) {
                     for (let i = 0; i < count; i++) data.push(all[Math.floor(Math.random() * all.length)]);
                 }
                 return res.status(200).json(data);
-
             case 'submitAnswers':
                 const { answers } = req.body;
                 const qColl = db.collection('questions');
@@ -62,8 +61,8 @@ export default async function handler(req, res) {
                 for (const ans of answers) {
                     const q = await qColl.findOne({ id: ans.questionId });
                     if (!q) continue;
-                    // Number()で型を強制統一 → 「正解のはずなのに不正解」バグ完全対策
-                    const correct = Number(ans.selected) === Number(q.correctIndex);
+                    // テキスト比較に完全変更 → 選択肢の順番に関係なく正しい判定
+                    const correct = ans.selected === q.answers[q.correctIndex];
                     if (correct) correctCount++;
                     const newAttempts = (q.attempts || 0) + 1;
                     const newCorrects = (q.corrects || 0) + (correct ? 1 : 0);
