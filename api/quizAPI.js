@@ -1,5 +1,4 @@
-// pages/api/quizAPI.js （Vercel用・完全版）
-// DB_COUNTで統一済み・名前対応済み
+// pages/api/quizAPI.js （Vercel用・完全修正版）
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.DB_COUNT;
@@ -63,13 +62,20 @@ export default async function handler(req, res) {
                 for (const ans of answers) {
                     const q = await qColl.findOne({ id: ans.questionId });
                     if (!q) continue;
-                    const correct = ans.selected === q.correctIndex;
+                    // Number()で型を強制統一 → 「正解のはずなのに不正解」バグ完全対策
+                    const correct = Number(ans.selected) === Number(q.correctIndex);
                     if (correct) correctCount++;
                     const newAttempts = (q.attempts || 0) + 1;
                     const newCorrects = (q.corrects || 0) + (correct ? 1 : 0);
                     const newRate = Math.round((newCorrects / newAttempts) * 100);
                     await qColl.updateOne({ id: ans.questionId }, { $set: { correctRate: newRate, attempts: newAttempts, corrects: newCorrects } }).catch(() => {});
-                    detailedResults.push({ questionText: q.questionText, correct, correctAnswer: q.answers[q.correctIndex], explanation: q.explanation, correctRate: newRate });
+                    detailedResults.push({
+                        questionText: q.questionText,
+                        correct,
+                        correctAnswer: q.answers[q.correctIndex],
+                        explanation: q.explanation,
+                        correctRate: newRate
+                    });
                 }
                 return res.status(200).json({ correctCount, detailedResults });
 
@@ -83,7 +89,7 @@ export default async function handler(req, res) {
                 const ranking = await db.collection('scores')
                     .find({})
                     .sort({ score: -1 })
-                    .limit(50)          // ← 50位まで
+                    .limit(50)
                     .toArray();
                 return res.status(200).json(ranking);
 
