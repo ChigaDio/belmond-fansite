@@ -1,7 +1,19 @@
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB;
+const uri = process.env.DB_COUNT;   // quizAPIと同じ環境変数を使用
 const client = new MongoClient(uri);
+const DB_NAME = 'belmond_fan_data';
+
+async function parseBody(req) {
+    return new Promise((resolve) => {
+        let data = '';
+        req.on('data', chunk => data += chunk);
+        req.on('end', () => {
+            try { resolve(data ? JSON.parse(data) : {}); }
+            catch { resolve({}); }
+        });
+    });
+}
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,11 +21,11 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method === 'POST') req.body = await parseBody(req);
 
     try {
         await client.connect();
-        const db = client.db('belmond_fan_data');
-        const rankingCollection = db.collection('quizRanking');   // ← QuizAPIと同じコレクションを使用（存在しなければ自動作成）
+        const db = client.db(DB_NAME);
 
         const { userId, name } = req.body;
 
@@ -21,20 +33,27 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'userId と name は必須です' });
         }
 
-        await rankingCollection.updateOne(
+        const trimmedName = name.trim();
+
+        // users コレクションにも名前を保存（将来の拡張に備えて）
+        const usersColl = db.collection('users');
+        await usersColl.updateOne(
             { userId },
-            { 
-                $set: { 
-                    name: name.trim(),
-                    updatedAt: new Date()
-                }
-            },
+            { $set: { name: trimmedName, updatedAt: new Date() } },
             { upsert: true }
         );
 
-        res.status(200).json({ success: true, message: '名前を変更しました' });
+        // scores コレクション（ランキング用）に名前を保存
+        const scoresColl = db.collection('scores');
+        await scoresColl.updateOne(
+            { userId },
+            { $set: { name: trimmedName, updatedAt: new Date() } },
+            { upsert: true }
+        );
+
+        return res.status(200).json({ success: true, message: '名前を変更しました' });
     } catch (error) {
         console.error('changeName Error:', error);
-        res.status(500).json({ error: 'サーバーエラー', details: error.message });
+        return res.status(500).json({ error: 'サーバーエラー', details: error.message });
     }
 }
