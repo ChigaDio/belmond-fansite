@@ -278,6 +278,7 @@
                 <li><a href="./index.html">Index</a></li>
                 <li><a href="./videos.html">Video</a></li>
                 <li><a href="./about.html" class="active">About</a></li>
+                                <li><a href="./game.html">Game</a></li>
             </ul>
         </nav>
     </div>
@@ -444,7 +445,7 @@ window.addEventListener('resize', function() {
 // 新機能: 背景画像と作者情報のランダム選択と定期切り替え
 let backgroundData = []; // APIから取得したデータ配列
 let currentIndex = -1;
-const switchInterval = 10000; // 切り替え間隔 (10秒)
+const switchInterval = 100000; // 切り替え間隔 (10秒)
 let switchTimer;
 
 async function loadBackgroundData() {
@@ -487,7 +488,7 @@ function initialDisplay() {
 
     // 初回はランダム選択（データ1つでもOK）
     currentIndex = getRandomIndex();
-    const data = backgroundData[currentIndex];
+    const data = backgroundData[8];
 
     let translateX = 0.0;
     if("translateX" in data)
@@ -522,7 +523,7 @@ function switchBackground() {
     setTimeout(() => {
         // 次を順番に選択（連続同じは自然に避けられる）
         currentIndex = getNextSequentialIndex();
-        const data = backgroundData[currentIndex];
+        const data = backgroundData[8];
 
         let translateX = 0.0;
         if("translateX" in data)        {
