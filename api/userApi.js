@@ -9,52 +9,63 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
     await client.connect();
-    const database = client.db('belmond_fan_data');
+    const db = client.db('belmond_fan_data');
 
     // 元のchannels取得
-    if (req.method === 'GET' && !req.query.userId && !req.query.allRecs) {
-      const collection = database.collection('channels');
+    if (req.method === 'GET' && !req.query.userId && !req.query.allUsersRecs) {
+      const collection = db.collection('channels');
       const data = await collection.findOne({});
-      if (!data) {
-        return res.status(404).json({ error: 'データが見つかりませんでした' });
-      }
+      if (!data) return res.status(404).json({ error: 'データなし' });
       return res.status(200).json(data);
     }
 
-    // 全ユーザーのおすすめを取得（新しい機能）
-    if (req.method === 'GET' && req.query.allRecs === 'true') {
-      const recCollection = database.collection('user_recommendations');
-      const allUsersRecs = await recCollection.find({}).toArray();
+    // ★ 新機能：全ユーザーのおすすめ一覧（ページング付き）
+    if (req.method === 'GET' && req.query.allUsersRecs === 'true') {
+      const page = parseInt(req.query.page) || 1;
+      const limit = 10; // 1ページ10ユーザー
+      const skip = (page - 1) * limit;
 
-      // すべてのユーザーのおすすめIDをフラットに集める（重複除去）
-      const allRecIds = [...new Set(allUsersRecs.flatMap(user => user.recIds || []))];
+      const recCollection = db.collection('user_recommendations');
+      
+      const totalUsers = await recCollection.countDocuments({ recIds: { $exists: true, $ne: [] } });
+      const users = await recCollection.find({ recIds: { $exists: true, $ne: [] } })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
 
-      return res.status(200).json({ recIds: allRecIds });
+      return res.status(200).json({
+        users: users.map(u => ({
+          userId: u.userId,
+          name: u.name || u.userId.slice(0, 8) + '...', // 名前があれば使う
+          recCount: u.recIds.length
+        })),
+        totalUsers,
+        totalPages: Math.ceil(totalUsers / limit),
+        currentPage: page
+      });
     }
 
-    // 自分のおすすめを取得（既存）
+    // 既存の自分のおすすめ取得
     if (req.method === 'GET' && req.query.userId) {
       const { userId } = req.query;
-      const recCollection = database.collection('user_recommendations');
+      const recCollection = db.collection('user_recommendations');
       const userRec = await recCollection.findOne({ userId });
       const recIds = userRec ? userRec.recIds || [] : [];
       return res.status(200).json({ recIds });
     }
 
-    // POST（おすすめの追加/削除）
+    // POST（追加/削除）
     if (req.method === 'POST') {
       const { userId, videoId, action } = req.body;
       if (!userId || !videoId || !action) {
         return res.status(400).json({ error: 'パラメータ不足' });
       }
 
-      const recCollection = database.collection('user_recommendations');
+      const recCollection = db.collection('user_recommendations');
       let userRec = await recCollection.findOne({ userId });
       if (!userRec) {
         userRec = { userId, recIds: [] };
