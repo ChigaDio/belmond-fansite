@@ -1,32 +1,41 @@
 // pages/api/userRecsApi.js
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB_COUNT; // DB_COUNTを使用
+const uri = process.env.DB_COUNT;   // あなたの環境に合わせて
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
+  
+  // ★★★ CORSヘッダーを一番最初に設定 ★★★
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  // Preflight対応（これをヘッダーの直後に）
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   try {
     await client.connect();
     const db = client.db('belmond_fan_data');
-    const collection = db.collection('user_recommendations'); // 新規コレクション
-
-    const { userId } = req.query || req.body;
+    const collection = db.collection('user_recommendations');
 
     if (req.method === 'GET') {
+      const { userId } = req.query;
       if (!userId) return res.status(400).json({ error: 'userIdが必要です' });
+
       const userRec = await collection.findOne({ userId });
       const recIds = userRec ? userRec.recIds || [] : [];
       return res.status(200).json({ recIds });
     }
 
     if (req.method === 'POST') {
-      const { userId, videoId, action } = req.body; // action: 'add' | 'remove'
-      if (!userId || !videoId) return res.status(400).json({ error: 'パラメータ不足' });
+      const { userId, videoId, action } = req.body;
+
+      if (!userId || !videoId || !action) {
+        return res.status(400).json({ error: 'パラメータ不足' });
+      }
 
       let userRec = await collection.findOne({ userId });
       if (!userRec) {
@@ -48,10 +57,9 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });
+
   } catch (error) {
     console.error('userRecsApi Error:', error);
     res.status(500).json({ error: 'サーバーエラー', details: error.message });
-  } finally {
-    // Vercel Serverlessでは自動クローズ
   }
 }
