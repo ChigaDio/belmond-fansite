@@ -2267,7 +2267,7 @@ function toggleModalChat() {
                 // ユーザーおすすめタブ用の描画関数（左：ユーザー一覧 / 右：動画）
         function renderUserRecsList(data) {
 
-
+            showLoading();
             
             const grid = document.getElementById('videoGrid');
             grid.style.display = 'block';
@@ -2324,10 +2324,13 @@ function toggleModalChat() {
                 div.onclick = () => loadUserRecVideos(user.userId, user.userName);
                 container.appendChild(div);
             });
+
+            hideLoading();
         }
 
         // 選択したユーザーのおすすめ動画を右側に表示
         async function loadUserRecVideos(userId, userName) {
+            showLoading();
             const area = document.getElementById('userVideosArea');
             area.innerHTML = `<h3 style="margin-bottom:1.5rem;">${userName} のおすすめ動画</h3><div style="text-align:center; padding:2rem;">読み込み中...</div>`;
 
@@ -2357,6 +2360,7 @@ function toggleModalChat() {
                 console.error(e);
                 area.innerHTML = `<h3>${userName} のおすすめ動画</h3><p style="color:#ffaaaa;">動画の読み込みに失敗しました</p>`;
             }
+            hideLoading();
         }
 
         // 簡易動画カードHTML生成（既存のカードスタイルを再利用）
