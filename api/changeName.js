@@ -33,10 +33,18 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'userId と name は必須です' });
         }
 
+
         const trimmedName = name.trim();
 
         // users コレクションにも名前を保存（将来の拡張に備えて）
         const usersColl = db.collection('users');
+
+        //存在チェック
+        const existingUser = await usersColl.findOne({ name: trimmedName });
+        if (existingUser) {
+            return res.status(400).json({ error: 'その名前は既に使用されています' });
+        }
+
         await usersColl.updateOne(
             { userId },
             { $set: { name: trimmedName, updatedAt: new Date() } },
