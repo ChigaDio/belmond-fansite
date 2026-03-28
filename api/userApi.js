@@ -23,16 +23,22 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
-    // ★ 新機能：全ユーザーのおすすめ一覧（ページング付き）
+    // 全ユーザーのおすすめ一覧（ページング付き）
     if (req.method === 'GET' && req.query.allUsersRecs === 'true') {
       const page = parseInt(req.query.page) || 1;
-      const limit = 10; // 1ページ10ユーザー
+      const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
 
       const recCollection = db.collection('user_recommendations');
       
-      const totalUsers = await recCollection.countDocuments({ recIds: { $exists: true, $ne: [] } });
-      const users = await recCollection.find({ recIds: { $exists: true, $ne: [] } })
+      // おすすめを登録しているユーザーのみカウント
+      const totalUsers = await recCollection.countDocuments({ 
+        recIds: { $exists: true, $ne: [] } 
+      });
+
+      const users = await recCollection.find({ 
+        recIds: { $exists: true, $ne: [] } 
+      })
         .skip(skip)
         .limit(limit)
         .toArray();
@@ -40,12 +46,13 @@ export default async function handler(req, res) {
       return res.status(200).json({
         users: users.map(u => ({
           userId: u.userId,
-          name: u.name || u.userId.slice(0, 8) + '...', // 名前があれば使う
-          recCount: u.recIds.length
+          name: u.name || u.userId.slice(0, 8) + '...',
+          recCount: u.recIds ? u.recIds.length : 0
         })),
         totalUsers,
         totalPages: Math.ceil(totalUsers / limit),
-        currentPage: page
+        currentPage: page,
+        limit: limit
       });
     }
 
