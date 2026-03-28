@@ -1,78 +1,76 @@
-// pages/api/userRecsApi.js
+// pages/api/userApi.js
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.DB_COUNT;   // あなたの環境に合わせて
+const uri = process.env.DB_COUNT;
 const client = new MongoClient(uri);
 
 export default async function handler(req, res) {
-  // ==================== 元のCORS設定（いじらずに残す） ====================
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ==================== ここから userRecsApi の処理を追加 ====================
-  // POSTメソッドも許可するように拡張
-
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   try {
     await client.connect();
     const database = client.db('belmond_fan_data');
 
-    // ====================== 元の処理（userApi.js の部分） ======================
-    if (req.method === 'GET' && !req.query.action) {   // actionパラメータがない場合は元のchannels取得
+    // 元のchannels取得
+    if (req.method === 'GET' && !req.query.userId && !req.query.allRecs) {
       const collection = database.collection('channels');
       const data = await collection.findOne({});
-
       if (!data) {
-        return res.status(404).json({
-          error: 'データが見つかりませんでした',
-          info: 'DB: belmond_fan_data 内に channels コレクションが見つからないか、空です。'
-        });
+        return res.status(404).json({ error: 'データが見つかりませんでした' });
       }
       return res.status(200).json(data);
     }
 
-    // ====================== ここから新規：ユーザーおすすめ処理 ======================
-    const collection = database.collection('user_recommendations');
+    // 全ユーザーのおすすめを取得（新しい機能）
+    if (req.method === 'GET' && req.query.allRecs === 'true') {
+      const recCollection = database.collection('user_recommendations');
+      const allUsersRecs = await recCollection.find({}).toArray();
 
-    if (req.method === 'GET') {
+      // すべてのユーザーのおすすめIDをフラットに集める（重複除去）
+      const allRecIds = [...new Set(allUsersRecs.flatMap(user => user.recIds || []))];
+
+      return res.status(200).json({ recIds: allRecIds });
+    }
+
+    // 自分のおすすめを取得（既存）
+    if (req.method === 'GET' && req.query.userId) {
       const { userId } = req.query;
-      if (!userId) return res.status(400).json({ error: 'userIdが必要です' });
-
-      const userRec = await collection.findOne({ userId });
+      const recCollection = database.collection('user_recommendations');
+      const userRec = await recCollection.findOne({ userId });
       const recIds = userRec ? userRec.recIds || [] : [];
       return res.status(200).json({ recIds });
     }
 
+    // POST（おすすめの追加/削除）
     if (req.method === 'POST') {
       const { userId, videoId, action } = req.body;
-
       if (!userId || !videoId || !action) {
-        return res.status(400).json({ error: 'パラメータ不足です（userId, videoId, actionが必要）' });
+        return res.status(400).json({ error: 'パラメータ不足' });
       }
 
-      let userRec = await collection.findOne({ userId });
+      const recCollection = database.collection('user_recommendations');
+      let userRec = await recCollection.findOne({ userId });
       if (!userRec) {
         userRec = { userId, recIds: [] };
-        await collection.insertOne(userRec);
+        await recCollection.insertOne(userRec);
       }
 
       let recIds = userRec.recIds || [];
 
       if (action === 'add') {
-        if (recIds.length >= 5) {
-          return res.status(400).json({ error: '最大5件までです' });
-        }
-        if (!recIds.includes(videoId)) {
-          recIds.push(videoId);
-        }
+        if (recIds.length >= 5) return res.status(400).json({ error: '最大5件までです' });
+        if (!recIds.includes(videoId)) recIds.push(videoId);
       } else if (action === 'remove') {
         recIds = recIds.filter(id => id !== videoId);
       }
 
-      await collection.updateOne({ userId }, { $set: { recIds } }, { upsert: true });
-
+      await recCollection.updateOne({ userId }, { $set: { recIds } }, { upsert: true });
       return res.status(200).json({ success: true, recIds });
     }
 
