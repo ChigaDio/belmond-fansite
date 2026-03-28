@@ -84,7 +84,7 @@ export default async function handler(req, res) {
       let recIds = userRec.recIds || [];
 
       if (action === 'add') {
-        if (recIds.length >= 5) return res.status(400).json({ error: '最大5件までです' });
+        if (recIds.length >= 10) return res.status(400).json({ error: '最大5件までです' });
         if (!recIds.includes(videoId)) recIds.push(videoId);
       } else if (action === 'remove') {
         recIds = recIds.filter(id => id !== videoId);
