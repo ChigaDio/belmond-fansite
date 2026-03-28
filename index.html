@@ -44,8 +44,7 @@
             transition: all 0.3s ease;
         }
         header.scrolled { padding: 0.6rem 0; background: rgba(74, 43, 50, 0.94); }
-        .inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; height: 80px; }
-        .site-title { font-size: 1.9rem; font-weight: 700; color: var(--light-accent); letter-spacing: 1px; }
+.inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; height: 80px; }        .site-title { font-size: 1.9rem; font-weight: 700; color: var(--light-accent); letter-spacing: 1px; }
         .Menu ul { list-style: none; display: flex; gap: 2.5rem; }
         .Menu li a { text-decoration: none; color: var(--text-sub); font-size: 1.1rem; position: relative; transition: 0.3s; }
         .Menu li a:hover, .Menu li a.active { color: #fff; }
@@ -353,6 +352,97 @@
             .author-info {right: 5%; font-size: 1rem; padding: 0.8rem 1.2rem; }
             .author-profile-img { width: 32px; height: 32px; }
         }
+            @media  (max-width: 400px) {
+                #userInfo {
+                    position: absolute;
+                    top: 55px;
+                    left: 35%;
+                }
+            }
+
+                /* ▼▼▼ game.htmlから移植：ユーザー名表示スタイル ▼▼▼ */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        #userInfo {
+            background: rgba(168, 117, 138, 0.25);
+            padding: 6px 18px;
+            border-radius: 9999px;
+            color: var(--light-accent);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        #changeNameHeaderBtn {
+            font-size: 0.85rem;
+            padding: 4px 14px;
+            background: var(--primary-dark);
+            border: 1px solid var(--accent);
+            color: var(--text-sub);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #changeNameHeaderBtn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* ▼▼▼ game.htmlから移植：ユーザー名登録関連スタイル ▼▼▼ */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        #changeNameHeaderBtn {
+            font-size: 0.85rem;
+            padding: 4px 14px;
+            background: var(--primary-dark);
+            border: 1px solid var(--accent);
+            color: var(--text-sub);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #changeNameHeaderBtn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* 名前入力モーダル */
+        .Modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            display: none; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .ModalContent {
+            background: var(--bg-mid); padding: 2.5rem 2rem; border-radius: 16px;
+            text-align: center; border: 3px solid var(--accent);
+            box-shadow: 0 0 40px var(--shadow); max-width: 420px; width: 92%;
+        }
+        .ModalContent p {
+            font-size: 1.85rem; color: var(--light-accent); margin-bottom: 1.5rem; font-weight: 700;
+        }
+        #nameInput {
+            width: 100%; padding: 1.1rem 1.4rem; font-size: 1.25rem;
+            background: var(--bg-dark); border: 2px solid var(--accent);
+            color: var(--text-main); border-radius: 8px; margin-bottom: 1.5rem;
+            outline: none; transition: border 0.3s;
+        }
+        #nameInput:focus { border-color: #fff; }
+        #nameSubmit {
+            padding: 1rem 3rem; background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: #fff; border: none; border-radius: 50px; font-size: 1.2rem;
+            font-weight: bold; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        #nameSubmit:hover { transform: translateY(-3px) scale(1.05); }
     </style>
 </head>
 <body>
@@ -367,6 +457,10 @@
                 <li><a href="./game.html">Game</a></li>
             </ul>
         </nav>
+        <div id="userInfo">
+                👤 <span id="displayedName" style="font-weight: bold;"></span>
+                <button id="changeNameHeaderBtn">変更</button>
+            </div>
     </div>
 </header>
 
@@ -413,7 +507,34 @@
         <p>ゆっくりスクロールしながら最新動画をチェックしてくださいね🥃</p>
     </div>
 </main>
+<!-- game.htmlから移植した名前登録モーダル -->
+<div id="nameModal" class="Modal">
+    <div class="ModalContent">
+        <p>あなたの名前を教えてください 🥃</p>
+        <input type="text" id="nameInput" placeholder="名前（例：ベル好き太郎 / 睡民1234）" maxlength="20">
+        <button id="nameSubmit">決定する</button>
+    </div>
+</div>
 
+<div id="nameChangeOverlay" class="Modal">
+    <div class="ModalContent">
+        <div style="font-size: 2.4rem; margin-bottom: 1rem; color: var(--light-accent);">👤 名前登録・変更中...</div>
+        <div style="color: var(--accent); font-size: 1.35rem; line-height: 1.6;">
+            サーバーに送信しています<br>画面をそのままお待ちください 🥃
+        </div>
+        <div style="margin-top: 2.5rem; font-size: 2rem;">🥃🥃🥃</div>
+    </div>
+</div>
+
+<div id="nameChangeOverlay" class="Modal">
+    <div class="ModalContent">
+        <div style="font-size: 2.4rem; margin-bottom: 1rem; color: var(--light-accent);">👤 名前変更中...</div>
+        <div style="color: var(--accent); font-size: 1.35rem; line-height: 1.6;">
+            サーバーに送信しています<br>画面をそのままお待ちください 🥃
+        </div>
+        <div style="margin-top: 2.5rem; font-size: 2rem;">🥃🥃🥃</div>
+    </div>
+</div>
 <!-- 動画再生モーダル -->
 <div id="videoModal">
     <div class="modal-content">
@@ -705,6 +826,7 @@ function switchBackground() {
 
 window.addEventListener('load', () => {
     const windowWidth = window.innerWidth;
+
     if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
     {
         siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
@@ -718,7 +840,110 @@ window.addEventListener('load', () => {
     loadFollowerCount();
     loadVideos();
     loadBackgroundData(); // 新しい機能のロード
+    updateUserDisplay(); // ユーザー名表示の初期化
 });
+
+        // ====================== game.htmlから移植：ユーザー名登録機能 ======================
+        const API_BASE = 'https://belmond-fansite.vercel.app/api/quizAPI';
+        const NAME_CHANGE_API = 'https://belmond-fansite.vercel.app/api/changeName';
+        let userId = localStorage.getItem('quizUserId');
+        let userName = localStorage.getItem('quizUserName');
+
+        function getUserId() {
+            if (!userId) {
+                userId = Array.from({length:20}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*62)]).join('');
+                localStorage.setItem('quizUserId', userId);
+                fetch(`${API_BASE}?method=registerUser`, {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({userId})
+                });
+            }
+            return userId;
+        }
+
+        function updateUserDisplay() {
+            const info = document.getElementById('userInfo');
+            const nameEl = document.getElementById('displayedName');
+
+            if (userName) {
+                nameEl.textContent = userName;
+                info.style.display = 'flex';
+            } 
+
+
+            
+        }
+
+        async function changeUserName(newName) {
+            const overlay = document.getElementById('nameChangeOverlay');
+            overlay.style.display = 'flex';
+
+            const uid = getUserId();
+            try {
+                const res = await fetch(NAME_CHANGE_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, name: newName.trim() })
+                });
+
+                if (!res.ok) throw new Error('名前変更失敗');
+
+                userName = newName.trim();
+                localStorage.setItem('quizUserName', userName);
+                updateUserDisplay();
+                if (!userName) {
+                // 少し遅らせて表示（ページが完全に読み込まれた後に）
+                setTimeout(() => {
+                    getUserName(true);
+                    }, 800);
+                }
+                return true;
+            } catch (e) {
+                console.error(e);
+                alert('名前登録/変更に失敗しました…');
+                return false;
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function getUserName(forceShow = false) {
+            return new Promise(resolve => {
+                if (!forceShow && userName) return resolve(userName);
+
+                const modal = document.getElementById('nameModal');
+                const input = document.getElementById('nameInput');
+                const btn = document.getElementById('nameSubmit');
+
+                input.value = userName || '';
+                modal.style.display = 'flex';
+
+                // モーダルを閉じられないようにEscキーや背景クリックを無効化
+                btn.onclick = async () => {
+                    const newName = input.value.trim();
+                    if (newName === '') {
+                        alert('名前を入力してください');
+                        return;
+                    }
+                    const success = await changeUserName(newName);
+                    if (success) {
+                        modal.style.display = 'none';
+                        resolve(userName);
+                    }
+                };
+
+                // モーダル外クリックやEscキーで閉じられないようにする
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        alert('名前を登録してください');
+                    }
+                };
+            });
+        }
+
+        // 変更ボタンのイベント
+        document.getElementById('changeNameHeaderBtn').addEventListener('click', () => getUserName(true));
 </script>
 </body>
 </html>

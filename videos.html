@@ -713,6 +713,13 @@
         min-height: 50vh !important;
     }
 }
+            @media  (max-width: 400px) {
+                #userInfo {
+                    position: absolute;
+                    top: 55px;
+                }
+            }
+
     </style>
 </head>
 <body>
@@ -729,7 +736,7 @@
                 <li><a href="./game.html">Game</a></li>
             </ul>
         </nav>
-        <div id="userInfo" style="display: none;">
+        <div id="userInfo">
                 👤 <span id="displayedName" style="font-weight: bold;"></span>
                 <button id="changeNameHeaderBtn">変更</button>
             </div>
@@ -2186,8 +2193,6 @@ function toggleModalChat() {
             if (userName) {
                 nameEl.textContent = userName;
                 info.style.display = 'flex';
-            } else {
-                info.style.display = 'none';
             }
         }
 
