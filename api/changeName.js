@@ -51,6 +51,13 @@ export default async function handler(req, res) {
             { upsert: true }
         );
 
+        const user_recommendations = db.collection('user_recommendations');
+        await user_recommendations.updateOne(
+            { userId },
+            { $set: { userName: trimmedName, updatedAt: new Date() } },
+            { upsert: true }
+        );
+
         return res.status(200).json({ success: true, message: '名前を変更しました' });
     } catch (error) {
         console.error('changeName Error:', error);

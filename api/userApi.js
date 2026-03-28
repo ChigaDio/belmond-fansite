@@ -23,6 +23,8 @@ export default async function handler(req, res) {
       return res.status(200).json(data);
     }
 
+
+
     // 全ユーザーのおすすめ一覧（ページング付き）
     if (req.method === 'GET' && req.query.allUsersRecs === 'true') {
       const page = parseInt(req.query.page) || 1;
@@ -67,15 +69,15 @@ export default async function handler(req, res) {
 
     // POST（追加/削除）
     if (req.method === 'POST') {
-      const { userId, videoId, action } = req.body;
-      if (!userId || !videoId || !action) {
+      const { userId,userName,videoId, action } = req.body;
+      if (!userId || !videoId || !action || !userName) {
         return res.status(400).json({ error: 'パラメータ不足' });
       }
 
       const recCollection = db.collection('user_recommendations');
       let userRec = await recCollection.findOne({ userId });
       if (!userRec) {
-        userRec = { userId, recIds: [] };
+        userRec = { userId, userName, recIds: [] };
         await recCollection.insertOne(userRec);
       }
 
@@ -91,6 +93,7 @@ export default async function handler(req, res) {
       await recCollection.updateOne({ userId }, { $set: { recIds } }, { upsert: true });
       return res.status(200).json({ success: true, recIds });
     }
+
 
     return res.status(405).json({ error: 'Method Not Allowed' });
 
