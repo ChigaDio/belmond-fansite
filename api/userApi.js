@@ -7,14 +7,13 @@ const client = new MongoClient(uri);
 export default async function handler(req, res) {
   // ==================== 元のCORS設定（いじらずに残す） ====================
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // ==================== ここから userRecsApi の処理を追加 ====================
   // POSTメソッドも許可するように拡張
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
 
   try {
     await client.connect();
