@@ -628,6 +628,91 @@
         height: 100% !important;  /* iframeを親に合わせる */
     }
 }
+
+        /* ▼▼▼ 追加：ユーザー名＋おすすめ機能 ▼▼▼ */
+        .header-right { display: flex; align-items: center; gap: 2rem; }
+        #userInfo {
+            background: rgba(168, 117, 138, 0.25);
+            padding: 6px 18px;
+            border-radius: 9999px;
+            color: var(--light-accent);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        #changeNameHeaderBtn {
+            font-size: 0.85rem;
+            padding: 4px 14px;
+            background: var(--primary-dark);
+            border: 1px solid var(--accent);
+            color: var(--text-sub);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #changeNameHeaderBtn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: scale(1.05);
+        }
+        .rec-btn {
+            position:absolute; top:55px; right:12px; font-size:1.9rem;
+            color:#888; cursor:pointer; z-index:5; transition:all 0.25s;
+            text-shadow:0 2px 8px black;
+        }
+        .rec-btn.active { color:#4CAF50; transform:scale(1.15); }
+
+        .Modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            display: none; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .ModalContent {
+            background: var(--bg-mid); padding: 2.5rem 2rem; border-radius: 16px;
+            text-align: center; border: 3px solid var(--accent);
+            box-shadow: 0 0 40px var(--shadow); max-width: 420px; width: 92%;
+        }
+        .ModalContent p {
+            font-size: 1.85rem; color: var(--light-accent); margin-bottom: 1.5rem; font-weight: 700;
+        }
+        #nameInput {
+            width: 100%; padding: 1.1rem 1.4rem; font-size: 1.25rem;
+            background: var(--bg-dark); border: 2px solid var(--accent);
+            color: var(--text-main); border-radius: 8px; margin-bottom: 1.5rem;
+            outline: none; transition: border 0.3s;
+        }
+        #nameInput:focus { border-color: #fff; }
+        #nameSubmit {
+            padding: 1rem 3rem; background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: #fff; border: none; border-radius: 50px; font-size: 1.2rem;
+            font-weight: bold; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        #nameSubmit:hover { transform: translateY(-3px) scale(1.05); }
+        #nameChangeOverlay .ModalContent,
+        #submitOverlay .ModalContent {
+            animation: loadingPulse 1.8s infinite ease-in-out;
+        }
+        @keyframes loadingPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.7; }
+        }
+        /* ユーザーおすすめタブの縦長対応 */
+@media (max-width: 768px) {
+    #recsContainer {
+        flex-direction: column !important;
+    }
+    
+    #userList {
+        max-height: 35vh !important;
+    }
+    
+    #videosArea {
+        min-height: 50vh !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -635,6 +720,7 @@
 <header>
     <div class="inner">
         <div class="site-title">Belmond(非公式:ファンサイト)</div>
+        <div class="header-right"> 
         <nav class="Menu">
             <ul>
                 <li><a href="./index.html">Index</a></li>
@@ -643,6 +729,10 @@
                 <li><a href="./game.html">Game</a></li>
             </ul>
         </nav>
+        <div id="userInfo" style="display: none;">
+                👤 <span id="displayedName" style="font-weight: bold;"></span>
+                <button id="changeNameHeaderBtn">変更</button>
+            </div>
     </div>
 </header>
 
@@ -677,6 +767,7 @@
         <div class="tab-nav">
             <a href="#" class="active" id="tab-search">検索</a>
             <a href="#" id="tab-favorites">お気に入り</a>
+            <a id="tab-recent" href="#">ユーザーおすすめ</a>
             <a href="#" id="tab-playlists">再生リスト</a>
         </div>
 
@@ -775,6 +866,33 @@
     </div>
 </main>
 
+<!-- ▼ game.htmlから移植した名前登録モーダル ▼ -->
+<div id="nameModal" class="Modal">
+    <div class="ModalContent">
+        <p>あなたの名前を教えてください 🥃</p>
+        <input type="text" id="nameInput" placeholder="名前（例：ベル好き太郎 / 睡民1234）" maxlength="20">
+        <button id="nameSubmit">決定する</button>
+    </div>
+</div>
+<div id="nameChangeOverlay" class="Modal">
+    <div class="ModalContent">
+        <div style="font-size: 2.4rem; margin-bottom: 1rem; color: var(--light-accent);">👤 名前変更中...</div>
+        <div style="color: var(--accent); font-size: 1.35rem; line-height: 1.6;">
+            サーバーに送信しています<br>画面をそのままお待ちください 🥃
+        </div>
+        <div style="margin-top: 2.5rem; font-size: 2rem;">🥃🥃🥃</div>
+    </div>
+</div>
+<div id="submitOverlay" class="Modal">
+    <div class="ModalContent">
+        <div style="font-size: 2.4rem; margin-bottom: 1rem; color: var(--light-accent);">処理中...</div>
+        <div style="color: var(--accent); font-size: 1.35rem; line-height: 1.6;">
+            サーバーに送信しています<br>画面をそのままお待ちください 🥃
+        </div>
+        <div style="margin-top: 2.5rem; font-size: 2rem;">🥃🥃🥃</div>
+    </div>
+</div>
+
 <script>
 // グローバル変数
 let currentPage = 1;
@@ -787,6 +905,7 @@ let currentSort = 'published_at,-1';
 let currentView = 'search';
 let currentPlaylistId = null;
 let favorites = JSON.parse(localStorage.getItem('belmond_favorites') || '[]');
+let userRecommendations = JSON.parse(localStorage.getItem('belmond_user_recommendations') || '[]');
 let currentPlaylistVideos = [];
 let currentPlayingIndex = -1;
 let player = null; // プレイリスト用
@@ -1027,6 +1146,10 @@ function isFavorite(videoId) {
     return favorites.includes(videoId);
 }
 
+function isRecRecommended(videoId) {
+    return userRecommendations.includes(videoId);
+}
+
 async function toggleFavorite(videoId) {
     showLoading();
 
@@ -1086,7 +1209,28 @@ function switchTab(view) {
         document.getElementById('currentPlaylistVideos').style.display = 'none';
         document.getElementById('pagination').style.display = 'none';
         loadPlaylistList();
-    } else {
+    } else if (view === 'recs' || view === 'recent') {
+        currentView = view;
+        document.querySelectorAll('.tab-nav a').forEach(a => a.classList.remove('active'));
+        document.getElementById(`tab-${view}`).classList.add('active');
+        document.getElementById('searchControls').classList.add('hidden');
+        document.getElementById('pagination').style.display = 'none';
+
+        // 同期関数なので .then() で処理
+        fetch('https://belmond-fansite.vercel.app/api/userApi?allUsersRecs=true&page=1')
+            .then(res => res.json())
+            .then(data => {
+                renderUserRecsList(data);   // 新しい関数で左側ユーザー一覧を描画
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('videoGrid').innerHTML = 
+                    `<div class="playlist-error">ユーザー一覧の読み込みに失敗しました</div>`;
+            });
+    
+    
+
+    }else {
         loadVideos(1);
         document.getElementById('pagination').style.display = 'flex';
     }
@@ -1187,6 +1331,15 @@ async function loadVideos(page = 1) {
             });
         }
 
+        const uid = getUserId();
+        let userData = [];
+        if(uid != null)
+        {
+            userData = await fetch('https://belmond-fansite.vercel.app/api/userApi?userId=' + uid)
+                .then(res => res.json())
+                .catch(() => null);
+        }
+
         let grid;
         if (currentView === 'playlists' && currentPlaylistId) {
             grid = document.getElementById('playlistVideoGrid');
@@ -1226,6 +1379,7 @@ videos.forEach((video, index) => {
         upcomingInfo = `<div class="upcoming-info">開始予定: ${startTime} (あと${remainingMin}分)</div>`;
     }
 
+
     const card = document.createElement('div');
     card.className = cardClass;
     card.innerHTML = `
@@ -1247,6 +1401,24 @@ videos.forEach((video, index) => {
             ${upcomingInfo}
         </div>
     `;
+
+    // ▼▼▼ ユーザーおすすめボタン（見た目改善版） ▼▼▼
+    if (userName) {
+        const recBtn = document.createElement('span');
+        const isRec = userRecIds.includes(video._id);
+        
+        recBtn.className = `rec-btn ${isRec ? 'active' : ''}`;
+        recBtn.innerHTML = isRec ? '⭐' : '☆';           // 追加中は星（塗りつぶし）、未追加は白星
+        recBtn.title = isRec ? 'おすすめから解除' : 'おすすめに登録';
+        recBtn.dataset.id = video._id;
+        
+        recBtn.onclick = (e) => {
+            e.stopPropagation();
+            toggleUserRec(video._id);
+        };
+        
+        card.appendChild(recBtn);
+    }
 
     card.querySelector('.favorite-btn').addEventListener('click', e => {
         e.stopPropagation();
@@ -1833,12 +2005,14 @@ window.addEventListener('load', () => {
 
     loadFollowerCount();
     loadPlaylists();
+    loadUserRecIds();
     switchTab('search');
     makeLeftPlayerDraggable();
     loadBackgroundData(); // 新しい機能のロード
 
     document.getElementById('tab-search').addEventListener('click', e => { e.preventDefault(); switchTab('search'); });
     document.getElementById('tab-favorites').addEventListener('click', e => { e.preventDefault(); switchTab('favorites'); });
+    document.getElementById('tab-recent').addEventListener('click', e => { e.preventDefault(); switchTab('recent'); });
     document.getElementById('tab-playlists').addEventListener('click', e => { e.preventDefault(); switchTab('playlists'); });
 
     window.addEventListener('scroll', () => {
@@ -1882,6 +2056,9 @@ window.addEventListener('load', () => {
     // プレイリストトグル
     document.getElementById('autoNextToggle').addEventListener('change', e => autoNextEnabled = e.target.checked);
     document.getElementById('playlistLoopToggle').addEventListener('change', e => playlistLoopEnabled = e.target.checked);
+
+    updateUserDisplay();
+    document.getElementById('changeNameHeaderBtn').addEventListener('click', () => getUserName(true));
 });
 
 // upcoming残り時間更新関数追加
@@ -1917,6 +2094,320 @@ function toggleModalChat() {
         videoSection.classList.add('modal-video-centered');
     }
 }
+
+        // ▼▼▼ ユーザーおすすめ機能（新規） ▼▼▼
+        let userRecIds = [];
+
+        async function loadUserRecIds() {
+            const uid = getUserId();
+            try {
+                const res = await fetch(`https://belmond-fansite.vercel.app/api/userApi?userId=${uid}&userName=${encodeURIComponent(userName || '')}`);
+                const data = await res.json();
+                userRecIds = data.recIds || [];
+            } catch (e) { userRecIds = []; }
+        }
+
+        async function toggleUserRec(videoId) {
+            if (!userName) {
+                alert('まず名前を登録してください（ヘッダーの「変更」ボタンから）');
+                return;
+            }
+
+            showLoading();
+            const uid = getUserId();
+            const isAlready = userRecIds.includes(videoId);
+            const action = isAlready ? 'remove' : 'add';
+            
+
+            try {
+                const res = await fetch('https://belmond-fansite.vercel.app/api/userApi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: uid, 
+                        userName: userName,
+                        videoId: videoId, 
+                        action: action 
+                    })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                if (data.success) {
+                    userRecIds = data.recIds || [];
+                    
+                    // 画面上のボタンを即時更新
+                    document.querySelectorAll(`.rec-btn[data-id="${videoId}"]`).forEach(btn => {
+                        const nowActive = userRecIds.includes(videoId);
+                        btn.className = `rec-btn ${nowActive ? 'active' : ''}`;
+                        btn.innerHTML = nowActive ? '⭐' : '☆';
+                        btn.title = nowActive ? 'おすすめから解除' : 'おすすめに登録';
+                    });
+
+                    alert(isAlready ? 'おすすめから解除しました' : 'ユーザーおすすめに登録しました！（最大5件）');
+
+                    // 現在「ユーザーおすすめ」タブを開いている場合は再読み込み
+                    if (currentView === 'recs' || currentView === 'recent') {
+                        loadVideos(1);
+                    }
+                } else {
+                    alert('処理に失敗しました: ' + (data.error || '不明なエラー'));
+                }
+            } catch (e) {
+                console.error('toggleUserRec error:', e);
+                alert('おすすめの登録/解除に失敗しました。\n' + e.message);
+            }
+            hideLoading();
+        }
+
+        // ▼▼▼ game.htmlから移植したユーザー名登録ロジック ▼▼▼
+        const API_BASE = 'https://belmond-fansite.vercel.app/api/quizAPI';
+        const NAME_CHANGE_API = 'https://belmond-fansite.vercel.app/api/changeName';
+        let userId = localStorage.getItem('quizUserId');
+        let userName = localStorage.getItem('quizUserName');
+
+        function getUserId() {
+            if (!userId) {
+                userId = Array.from({length:20}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*62)]).join('');
+                localStorage.setItem('quizUserId', userId);
+                fetch(`${API_BASE}?method=registerUser`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId})});
+            }
+            return userId;
+        }
+
+        function updateUserDisplay() {
+            const info = document.getElementById('userInfo');
+            const nameEl = document.getElementById('displayedName');
+            if (userName) {
+                nameEl.textContent = userName;
+                info.style.display = 'flex';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+
+        async function changeUserName(newName) {
+            const overlay = document.getElementById('nameChangeOverlay');
+            overlay.style.display = 'flex';
+            const uid = getUserId();
+            try {
+                const res = await fetch(NAME_CHANGE_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uid, name: newName.trim() })
+                });
+                if (!res.ok) throw new Error();
+                userName = newName.trim();
+                localStorage.setItem('quizUserName', userName);
+                updateUserDisplay();
+                return true;
+            } catch (e) {
+                alert('名前変更に失敗しました…');
+                return false;
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function getUserName(forceShow = false) {
+            return new Promise(resolve => {
+                if (!forceShow && userName) return resolve(userName);
+                const modal = document.getElementById('nameModal');
+                const input = document.getElementById('nameInput');
+                const btn = document.getElementById('nameSubmit');
+                input.value = userName || '';
+                modal.style.display = 'flex';
+                btn.onclick = async () => {
+                    const newName = input.value.trim();
+                    if (newName === '') { alert('名前を入力してください'); return; }
+                    const success = await changeUserName(newName);
+                    if (success) {
+                        modal.style.display = 'none';
+                        resolve(userName);
+                    }
+                };
+            });
+        }
+
+        async function loadRecsPage(page) 
+        {
+            showLoading();
+            try {
+                fetch('https://belmond-fansite.vercel.app/api/userApi?allUsersRecs=true&page=' + page)
+                .then(res => res.json())
+                .then(data => {
+                    renderUserRecsList(data);   // 新しい関数で左側ユーザー一覧を描画
+                    hideLoading();
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('videoGrid').innerHTML = 
+                        `<div class="playlist-error">ユーザー一覧の読み込みに失敗しました</div>`;
+                                hideLoading();
+                });
+            } catch (e) {
+                console.error(e);
+                document.getElementById('videoGrid').innerHTML = 
+                    `<div class="playlist-error">ユーザー一覧の読み込みに失敗しました</div>`;
+                                hideLoading();
+            }
+        }
+
+
+                // ユーザーおすすめタブ用の描画関数（左：ユーザー一覧 / 右：動画）
+        function renderUserRecsList(data) {
+
+
+            
+            const grid = document.getElementById('videoGrid');
+            grid.style.display = 'block';
+            if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
+            {
+                display = "";
+            }
+            else
+            {
+                display = "display:flex";
+            }
+            grid.innerHTML = `
+                <div style="${display}; gap:2rem;">
+                    <!-- 左側：ユーザー一覧 -->
+                    <div style="width:280px; background:#2a1c24; border-radius:12px; padding:1rem; overflow-y:auto;">
+                        <h3 style="margin-bottom:1rem; color:var(--light-accent);">おすすめ登録ユーザー</h3>
+                        <div id="userListContainer"></div>
+                        ${data.totalPages > 1 ? `
+                                <div style="margin-top:1.5rem; text-align:center;">
+                                    ${Array.from({length: data.totalPages}, (_, i) => i+1).map(p => `
+                                        <button onclick="loadRecsPage(${p})" 
+                                                style="margin:0 4px; padding:6px 12px; background:${p === data.currentPage ? '#A8758A' : '#3a252e'}; color:white; border:none; border-radius:6px;">
+                                            ${p}
+                                        </button>
+                                    `).join('')}
+                                </div>` : ''}
+                    </div>
+                    
+                    <!-- 右側：選択されたユーザーの動画 -->
+                    <div style="flex:1; background:#25161C; border-radius:12px; padding:1.5rem;" id="userVideosArea">
+                        <p style="color:#aaa; text-align:center; padding:4rem;">ユーザーを選択してください</p>
+                    </div>
+                </div>
+            `;
+
+
+
+
+            const container = document.getElementById('userListContainer');
+            container.innerHTML = '';
+
+            if (!data.users || data.users.length === 0) {
+                container.innerHTML = '<p style="color:#aaa;">まだ誰もおすすめを登録していません</p>';
+                return;
+            }
+
+            data.users.forEach(user => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding:0.9rem 1rem; margin-bottom:0.5rem; background:#3a252e; border-radius:8px; cursor:pointer; transition:0.2s;';
+                div.innerHTML = `
+                    <strong>${user.userName}</strong><br>
+                    <small style="color:#aaa;">${user.recCount}件のおすすめ</small>
+                `;
+                div.onclick = () => loadUserRecVideos(user.userId, user.userName);
+                container.appendChild(div);
+            });
+        }
+
+        // 選択したユーザーのおすすめ動画を右側に表示
+        async function loadUserRecVideos(userId, userName) {
+            const area = document.getElementById('userVideosArea');
+            area.innerHTML = `<h3 style="margin-bottom:1.5rem;">${userName} のおすすめ動画</h3><div style="text-align:center; padding:2rem;">読み込み中...</div>`;
+
+            try {
+                // そのユーザーのおすすめIDを取得
+                const res = await fetch(`https://belmond-fansite.vercel.app/api/userApi?userId=${userId}`);
+                const data = await res.json();
+                const idsStr = (data.recIds || []).join(',');
+
+                if (!idsStr) {
+                    area.innerHTML = `<h3>${userName} のおすすめ動画</h3><p style="color:#aaa; padding:3rem;">このユーザーはまだおすすめを登録していません</p>`;
+                    return;
+                }
+
+                // 動画を取得
+                const videoRes = await fetch(`https://belmond-fansite.vercel.app/api/favoritesApi?ids=${idsStr}`);
+                const videoData = await videoRes.json();
+
+                // 右側に動画カードを表示
+                let html = `<h3>${userName} のおすすめ動画 (${videoData.videos.length}件)</h3><div class="video-grid">`;
+                videoData.videos.forEach(video => {
+                    html += createVideoCardHTML(video);   // 既存のカードHTML生成関数を流用（後で定義）
+                });
+                html += '</div>';
+                area.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                area.innerHTML = `<h3>${userName} のおすすめ動画</h3><p style="color:#ffaaaa;">動画の読み込みに失敗しました</p>`;
+            }
+        }
+
+        // 簡易動画カードHTML生成（既存のカードスタイルを再利用）
+        function createVideoCardHTML(video) {
+            const date = new Date(video.published_at || video.actual_end_time || video.scheduled_start_time);
+            return `
+                <div class="video-card" style="cursor:pointer;" onclick="openModalPlayer('${video._id}', '${video.title.replace(/'/g, "\\'")}')">
+                    <div class="thumbnail-wrapper">
+                        <img class="thumbnail" src="${video.thumbnail_url || `https://i.ytimg.com/vi/${video._id}/maxresdefault.jpg`}" alt="${video.title}">
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-meta">
+                            <span>${date.toLocaleDateString('ja-JP')}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+                window.loadUserRecVideos = async function(userId, userName) {
+            const area = document.getElementById('userVideosArea');
+            area.innerHTML = `<h3 style="margin-bottom:1rem;color:var(--light-accent);">${userName}のおすすめ</h3><div style="text-align:center;padding:3rem;color:#aaa;">読み込み中...</div>`;
+
+            try {
+                const res = await fetch(`https://belmond-fansite.vercel.app/api/userApi?userId=${userId}`);
+                const data = await res.json();
+                const idsStr = (data.recIds || []).join(',');
+
+                if (!idsStr) {
+                    area.innerHTML = `<h3>${userName}のおすすめ</h3><p style="color:#aaa;padding:3rem;">このユーザーはまだおすすめを登録していません</p>`;
+                    return;
+                }
+
+                const videoRes = await fetch(`https://belmond-fansite.vercel.app/api/favoritesApi?ids=${idsStr}`);
+                const videoData = await videoRes.json();
+
+                let html = `<h3>${userName}のおすすめ (${videoData.videos.length}件)</h3><div class="video-grid">`;
+                videoData.videos.forEach(video => {
+                    html += `
+                        <div class="video-card" onclick="openModalPlayer('${video._id}', '${video.title.replace(/'/g, "\\'")}')">
+                            <div class="thumbnail-wrapper">
+                                <img class="thumbnail" src="${video.thumbnail_url || `https://i.ytimg.com/vi/${video._id}/maxresdefault.jpg`}" alt="${video.title}">
+                            </div>
+                            <div class="video-info">
+                                <div class="video-title">${video.title}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                area.innerHTML = html;
+            } catch (e) {
+                area.innerHTML = `<h3>${userName}のおすすめ</h3><p style="color:#ffaaaa;">読み込み失敗</p>`;
+            }
+        };
 </script>
 </body>
 </html>
