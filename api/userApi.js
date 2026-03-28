@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         users: users.map(u => ({
           userId: u.userId,
-          name: u.name || u.userId.slice(0, 8) + '...',
+          userName: u.userName || u.userId.slice(0, 8) + '...',
           recCount: u.recIds ? u.recIds.length : 0
         })),
         totalUsers,
