@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
             case 'getRanking':
                 const ranking = await db.collection('scores')
-                    .find({})
+                    .find({ score: { $exists: true, $ne: null } })
                     .sort({ score: -1 })
                     .limit(50)
                     .toArray();
