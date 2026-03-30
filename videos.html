@@ -720,6 +720,33 @@
                 }
             }
 
+
+                    #userIdInput {
+            width: 100%; padding: 0.9rem 1.2rem; font-size: 1.1rem;
+            background: var(--bg-dark); border: 2px solid var(--accent);
+            color: var(--text-main); border-radius: 8px; margin-top: 1rem;
+            outline: none; transition: border 0.3s;
+        }
+        #userIdInput:focus { border-color: #fff; }
+        #userIdSubmit {
+            margin-top: 0.8rem; padding: 0.9rem 2.5rem; background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: #fff; border: none; border-radius: 50px; font-size: 1.1rem;
+            font-weight: bold; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        #userIdSubmit:hover {
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            transform: scale(1.05);
+        }
+        #nameDetails_p {
+            margin-top: 1.2rem; font-size: 0.95rem;
+        }
+                #userIdCopySubmit {
+            margin-top: -0.8rem; padding: 0.5rem 2.5rem; background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: #fff; border: none; border-radius: 50px; font-size: 1.25rem;
+            font-weight: bold; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 6px 20px var(--shadow);
+        }
     </style>
 </head>
 <body>
@@ -879,6 +906,13 @@
         <p>あなたの名前を教えてください 🥃</p>
         <input type="text" id="nameInput" placeholder="名前（例：ベル好き太郎 / 睡民1234）" maxlength="20">
         <button id="nameSubmit">決定する</button>
+        <details id="nameDetails">
+            <summary>ID確認・ログイン</summary>
+            <p id="nameDetails_p"></p>
+                        <button id="userIdCopySubmit" >IDコピー</button>
+            <input type="text" id="userIdInput" placeholder="ユーザーID" maxlength="20">
+            <button id="userIdSubmit">IDでログイン</button>
+        </details>
     </div>
 </div>
 <div id="nameChangeOverlay" class="Modal">
@@ -2206,13 +2240,20 @@ function toggleModalChat() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: uid, name: newName.trim() })
                 });
-                if (!res.ok) throw new Error();
+                if (!res.ok) 
+                {
+                    if(res.status === 400) {
+                        const errorData = await res.json();
+                        throw new Error("すでに存在するお名前です");
+                    }
+                    throw new Error('名前変更失敗しました');
+                }
                 userName = newName.trim();
                 localStorage.setItem('quizUserName', userName);
                 updateUserDisplay();
                 return true;
             } catch (e) {
-                alert('名前変更に失敗しました…');
+                alert(e.message || '名前変更に失敗しました…');
                 return false;
             } finally {
                 overlay.style.display = 'none';
@@ -2222,16 +2263,85 @@ function toggleModalChat() {
         function getUserName(forceShow = false) {
             return new Promise(resolve => {
                 if (!forceShow && userName) return resolve(userName);
+
                 const modal = document.getElementById('nameModal');
                 const input = document.getElementById('nameInput');
+                const details = document.getElementById('nameDetails');
+                const details_p = details.querySelector('p');
                 const btn = document.getElementById('nameSubmit');
+                const userIdInput = document.getElementById('userIdInput');
+                const userIdSubmit = document.getElementById('userIdSubmit');
+
+                                const userIdCopySubmit = document.getElementById('userIdCopySubmit');
+
+                userIdCopySubmit.onclick = () => {
+                    const uid = getUserId();
+                    navigator.clipboard.writeText(uid).then(() => {
+                        alert(`ユーザーID「${uid}」をコピーしました！\n（このIDでログインできます）`);
+                    }).catch(() => {
+                        alert('ユーザーIDのコピーに失敗しました。手動でコピーしてください: ' + uid);
+                    });
+                };
+
                 input.value = userName || '';
                 modal.style.display = 'flex';
+                
+                details_p.textContent = userName ? `現在のユーザーID: ${getUserId()}` : 'ユーザーIDをお持ちの方は、こちらからログインできます';
+
+                // モーダルを閉じられないようにEscキーや背景クリックを無効化
                 btn.onclick = async () => {
                     const newName = input.value.trim();
-                    if (newName === '') { alert('名前を入力してください'); return; }
+                    if (newName === '') {
+                        alert('名前を入力してください');
+                        return;
+                    }
                     const success = await changeUserName(newName);
                     if (success) {
+                        modal.style.display = 'none';
+                        resolve(userName);
+                    }
+                };
+
+                //IDログイン
+                userIdSubmit.onclick = async () => {
+                    const enteredId = userIdInput.value.trim();
+                    if (enteredId === '') {
+                        alert('ユーザーIDを入力してください');
+                        return;
+                    }
+                    // IDが一致すれば、名前を取得して表示
+                    try {
+                        showLoading();
+                        const USER_API = 'https://belmond-fansite.vercel.app/api/userApi';
+                        const res = await fetch(`${USER_API}?userId=${enteredId}&userIdLogin=true`);
+                        if (!res.ok)
+                        {
+                            if(res.status === 400) {
+                                const errorData = await res.json();
+                                throw new Error("ユーザーIDが見つかりませんでした");
+                            }
+                            throw new Error('ユーザー情報の取得に失敗しました');
+                        }
+                        const data = await res.json();
+                        userName = data.name;
+                        userId = data.userId
+                        localStorage.setItem('quizUserName', userName);
+                        localStorage.setItem('quizUserId', userId);
+                        updateUserDisplay();
+                        modal.style.display = 'none';
+                        resolve(userName);
+                    } catch (e) {
+                        console.error(e);
+                        alert(e.message || 'ユーザー情報の取得に失敗しました');
+                    }
+                    hideLoading();
+                };
+
+
+
+                // モーダル外クリックやEscキーで閉じられないようにする
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
                         modal.style.display = 'none';
                         resolve(userName);
                     }
