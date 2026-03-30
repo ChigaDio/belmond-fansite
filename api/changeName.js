@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
         //存在チェック
         const existingUser = await usersColl.findOne({ name: trimmedName });
-        if (existingUser) {
+        if (existingUser && existingUser.userId !== userId) {
             return res.status(400).json({ error: 'その名前は既に使用されています' });
         }
 

@@ -58,6 +58,15 @@ export default async function handler(req, res) {
       });
     }
 
+    if(req.method === 'GET' && req.query.userId && req.query.userIdLogin === 'true')
+    {
+      const { userId } = req.query;
+      const usersColl = db.collection('users');
+      const user = await usersColl.findOne({ userId });
+      if (!user) return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      return res.status(200).json({ userId: user.userId, name: user.name || '' });
+    }
+
     // 既存の自分のおすすめ取得
     if (req.method === 'GET' && req.query.userId) {
       const { userId } = req.query;
