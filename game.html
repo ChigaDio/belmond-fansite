@@ -1,3 +1,4 @@
+<DOCUMENT filename="game.html">
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -22,7 +23,7 @@
             min-height: 100vh;
         }
 
-        /* ====================== HEADER (index.html と完全に同一デザイン・システム) ====================== */
+        /* ====================== HEADER ====================== */
         header {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             background: rgba(104, 61, 70, 0.88);
@@ -79,7 +80,7 @@
             transform: scale(1.05);
         }
 
-        /* ====================== スマホ・縦長対応（index.html のレスポンシブ計算をそのまま反映） ====================== */
+        /* ====================== スマホ・縦長対応 ====================== */
         @media (max-width: 1024px) {
             .inner { padding: 0 1.5rem; }
             .Menu ul { gap: 1.8rem; }
@@ -226,6 +227,123 @@
             font-size: 1.8rem; margin-bottom: 1.5rem; text-align: center; color: var(--light-accent); 
         }
 
+        /* ====================== クイズ作成画面 ====================== */
+        .QuizListContainer { margin-bottom: 3rem; }
+        .QuizTable table { width: 100%; border-collapse: collapse; }
+        .QuizTable th, .QuizTable td {
+            padding: 1.2rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(168, 117, 138, 0.2);
+        }
+        .QuizTable th { background: var(--bg-dark); color: var(--light-accent); font-weight: bold; }
+        .QuizTable tr.own-quiz { background: linear-gradient(90deg, rgba(168,117,138,0.25), transparent); }
+        .QuizTable td.question-cell { word-break: break-word; max-width: 380px; line-height: 1.4; }
+
+        .delete-quiz-btn, .edit-quiz-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            margin-right: 8px;
+        }
+        .edit-quiz-btn { background: #FF9800; color: #fff; }
+        .delete-quiz-btn { background: #F44336; color: #fff; }
+        .edit-quiz-btn:hover { background: #F57C00; transform: scale(1.05); }
+        .delete-quiz-btn:hover { background: #d32f2f; transform: scale(1.05); }
+
+        .QuizCards {
+            display: none;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .QuizCard {
+            background: var(--bg-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--accent);
+            box-shadow: 0 6px 20px var(--shadow);
+            transition: transform 0.3s;
+        }
+        .QuizCard:hover { transform: translateY(-4px); }
+        .QuizCard.own-quiz { border-color: #FF9800; }
+        .QuizCard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .QuizCard-id {
+            font-family: 'DotGothic16';
+            font-size: 1.6rem;
+            color: var(--light-accent);
+        }
+        .QuizCard-difficulty {
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            color: #fff;
+            font-weight: bold;
+        }
+        .QuizCard-question {
+            font-size: 1.15rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+        .QuizCard-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 1rem;
+            color: var(--text-sub);
+        }
+        .QuizCard-buttons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .QuizTable { display: none; }
+            .QuizCards { display: flex; }
+            .QuizCard-question { font-size: 1.1rem; }
+        }
+        @media (max-width: 480px) {
+            .QuizCard { padding: 1.2rem; }
+        }
+
+        .answer-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: var(--bg-mid);
+            border-radius: 8px;
+        }
+        .answer-text-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.05rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            color: var(--text-main);
+        }
+        .del-answer-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #F44336;
+            color: #fff;
+            border: 0;
+            font-size: 1.3rem;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
         footer { text-align: center; padding: 4rem; font-size: 0.9rem; color: var(--accent); opacity: 0.6; }
 
         /* ====================== モーダル ====================== */
@@ -256,7 +374,6 @@
         }
         #nameSubmit:hover { transform: translateY(-3px) scale(1.05); }
 
-        /* 名前変更・登録中オーバーレイ（画面暗く＋アニメーション＋操作不可） */
         #nameChangeOverlay .ModalContent,
         #submitOverlay .ModalContent {
             animation: loadingPulse 1.8s infinite ease-in-out;
@@ -265,15 +382,18 @@
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.08); opacity: 0.7; }
         }
-                    @media  (max-width: 400px) {
-                #userInfo {
-                    position: absolute;
-                    top: 55px;
-                }
-            }
 
+        @media (max-width: 400px) {
+            #userInfo { position: absolute; top: 55px; }
+        }
 
-                    #userIdInput {
+        #loadingOverlay {
+            display:none; position:fixed; inset:0; background:rgba(20,11,15,0.94); z-index:2000;
+            align-items:center; justify-content:center; flex-direction:column;
+            color:var(--light-accent); font-size:1.9rem; gap:2rem;
+        }
+
+                            #userIdInput {
             width: 100%; padding: 0.9rem 1.2rem; font-size: 1.1rem;
             background: var(--bg-dark); border: 2px solid var(--accent);
             color: var(--text-main); border-radius: 8px; margin-top: 1rem;
@@ -293,13 +413,7 @@
         #nameDetails_p {
             margin-top: 1.2rem; font-size: 0.95rem;
         }
-
-                #loadingOverlay {
-            display:none; position:fixed; inset:0; background:rgba(20,11,15,0.94); z-index:2000;
-            align-items:center; justify-content:center; flex-direction:column;
-            color:var(--light-accent); font-size:1.9rem; gap:2rem;
-        }
-        #userIdCopySubmit {
+                #userIdCopySubmit {
             margin-top: -0.8rem; padding: 0.5rem 2.5rem; background: linear-gradient(90deg, var(--primary), var(--accent));
             color: #fff; border: none; border-radius: 50px; font-size: 1.25rem;
             font-weight: bold; cursor: pointer; transition: all 0.3s;
@@ -321,8 +435,8 @@
                     <li><a href="./game.html" class="active">Game</a></li>
                 </ul>
             </nav>
-            <div id="userInfo" style="display: none;">
-                👤 <span id="displayedName" style="font-weight: bold;"></span>
+            <div id="userInfo"">
+                👤 <span id="displayedName" style="font-weight: bold;">ログイン</span>
                 <button id="changeNameHeaderBtn">変更</button>
             </div>
         </div>
@@ -337,6 +451,7 @@
             <div class="StartButtons">
                 <button class="StartBtn" id="startQuiz">クイズを開始</button>
                 <button class="RankingBtn" id="showRankingBtn">ランキングを見る（50位まで）</button>
+                <button class="StartBtn" id="createQuizBtn" style="display: none;">クイズを作成する</button>
             </div>
         </div>
 
@@ -375,7 +490,6 @@
                 </div>
             </div>
             
-            <!-- 問題終了後の2つの戻るボタン -->
             <button class="AgainBtn" id="againBtn" style="display:none;">もう一度クイズを始める</button>
             <button class="BackToStartBtn" id="backToMenuBtn" style="display:none;">クイズ／ランキング選択に戻る</button>
         </div>
@@ -385,9 +499,88 @@
             <ul class="RankingList" id="fullRankingList"></ul>
             <button class="StartBtn" id="backToStart" style="margin:2rem auto;display:block;">スタート画面に戻る</button>
         </div>
+
+        <!-- ====================== クイズ作成・管理画面 ====================== -->
+        <div id="createQuizBoard" style="display: none;">
+            <h3 class="RankingTitle">クイズ作成・管理 🥃</h3>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                <input type="text" id="quizSearchInput" 
+                       placeholder="問題文で検索（スペース区切りで複数ワード可）" 
+                       style="flex: 1; min-width: 250px; padding: 1rem; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: var(--text-main); font-size: 1.1rem;">
+                <label style="display:flex; align-items:center; gap: 8px; font-size:1.05rem; color:var(--text-sub); white-space: nowrap; cursor:pointer;">
+                    <input type="checkbox" id="myQuizzesOnly" style="accent-color:var(--accent);"> 
+                    自分の作成したクイズのみ
+                </label>
+            </div>
+
+            <div id="pagingControls" style="margin-bottom: 1.5rem; text-align: center;"></div>
+
+            <div class="QuizListContainer">
+                <div id="tableWrapper" class="QuizTable" style="overflow-x: auto;">
+                    <table style="width:100%; border-collapse: collapse; background: var(--bg-mid);">
+                        <thead>
+                            <tr>
+                                <th style="padding: 1.2rem 1rem; text-align: left; border-bottom: 2px solid var(--accent);">ID</th>
+                                <th style="padding: 1.2rem 1rem; text-align: left; border-bottom: 2px solid var(--accent);">問題文</th>
+                                <th style="padding: 1.2rem 1rem; text-align: center; border-bottom: 2px solid var(--accent);">難易度</th>
+                                <th style="padding: 1.2rem 1rem; text-align: center; border-bottom: 2px solid var(--accent);">選択肢数</th>
+                                <th style="padding: 1.2rem 1rem; text-align: center; border-bottom: 2px solid var(--accent);">正解率</th>
+                                <th style="padding: 1.2rem 1rem; text-align: center; border-bottom: 2px solid var(--accent);">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quizzesTableBody" style="font-size: 1.05rem;"></tbody>
+                    </table>
+                </div>
+
+                <div id="quizzesCardView" class="QuizCards"></div>
+            </div>
+
+            <!-- 新規／編集フォーム -->
+            <h3 style="color: var(--light-accent); margin-bottom: 1rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem;">新規クイズ作成</h3>
+            <div id="createForm" style="background: var(--bg-dark); border-radius: 12px; padding: 2rem;">
+                <div id="editIdDisplay" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,152,0,0.15); border-radius: 8px; border: 1px solid #FF9800;">
+                    <strong style="color:#FF9800;">編集中のID：</strong> 
+                    <span id="editingIdSpan" style="font-family: 'DotGothic16'; font-size: 1.8rem; color: var(--light-accent);"></span>
+                    <small style="margin-left: 1rem; color: var(--accent);">（変更できません）</small>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--accent);">問題文</label>
+                    <textarea id="newQuestionText" rows="3" placeholder="クイズの問題を入力..." 
+                              style="width: 100%; padding: 1rem; background: var(--bg-mid); border: 1px solid var(--accent); border-radius: 8px; color: var(--text-main); resize: vertical;"></textarea>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--accent);">難易度</label>
+                    <select id="newDifficulty" style="padding: 1rem; background: var(--bg-mid); border: 1px solid var(--accent); border-radius: 8px; color: var(--text-main); width: 100%;">
+                        <option value="easy">easy（簡単）</option>
+                        <option value="medium" selected>medium（普通）</option>
+                        <option value="hard">hard（難しい）</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--accent);">解説（正解後の表示）</label>
+                    <textarea id="newExplanation" rows="4" placeholder="正解の解説文を入力..." 
+                              style="width: 100%; padding: 1rem; background: var(--bg-mid); border: 1px solid var(--accent); border-radius: 8px; color: var(--text-main); resize: vertical;"></textarea>
+                </div>
+
+                <div id="answersContainer" style="margin-bottom: 1.5rem;">
+                    <!-- JSで動的に生成 -->
+                </div>
+
+                <button id="addAnswerBtn" class="StartBtn" style="margin-bottom: 1.5rem;">+ 選択肢を追加（最大4）</button>
+
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button id="createQuizSubmitBtn" class="SubmitRankingBtn" style="flex: 1; min-width: 200px;">このクイズを登録する 🏆</button>
+                    <button id="cancelEditBtn" class="BackToStartBtn" style="display: none; flex: 1; min-width: 180px;">キャンセルして新規作成に戻る</button>
+                </div>
+            </div>
+
+            <button id="backFromCreateBtn" class="BackToStartBtn" style="margin: 2rem auto 0; display: block;">スタート画面に戻る</button>
+        </div>
     </div>
 
-        <div id="loadingOverlay">
+    <div id="loadingOverlay">
         <div class="spinner"></div>
         <div>読み込み中...</div>
     </div>
@@ -404,15 +597,14 @@
         <input type="text" id="nameInput" placeholder="名前（例：ベル好き太郎 / 睡民1234）" maxlength="20">
         <button id="nameSubmit">決定する</button>
 
-            <details id="nameDetails">
+        <details id="nameDetails">
             <summary>ID確認・ログイン</summary>
             <p id="nameDetails_p"></p>
-            <button id="userIdCopySubmit" >IDコピー</button>
+            <button id="userIdCopySubmit">IDコピー</button>
             <input type="text" id="userIdInput" placeholder="ユーザーID" maxlength="20">
             <button id="userIdSubmit">IDでログイン</button>
-    </details>
+        </details>
     </div>
-
 </div>
 
 <!-- 名前変更中オーバーレイ -->
@@ -462,12 +654,9 @@
         if (userName) {
             nameEl.textContent = userName;
             info.style.display = 'flex';
-        } else {
-            info.style.display = 'none';
         }
     }
 
-    // ====================== 新しい名前変更API呼び出し ======================
     async function changeUserName(newName) {
         const overlay = document.getElementById('nameChangeOverlay');
         overlay.style.display = 'flex';
@@ -485,8 +674,7 @@
                 body: JSON.stringify({ userId: uid, name: newName.trim() })
             });
 
-            if (!res.ok) 
-            {
+            if (!res.ok) {
                 if(res.status === 400) {
                     const errorData = await res.json();
                     throw new Error("すでに存在するお名前です");
@@ -507,93 +695,88 @@
         }
     }
 
-        function getUserName(forceShow = false) {
-            return new Promise(resolve => {
-                if (!forceShow && userName) return resolve(userName);
+    function getUserName(forceShow = false) {
+        return new Promise(resolve => {
+            if (!forceShow && userName) return resolve(userName);
 
-                const modal = document.getElementById('nameModal');
-                const input = document.getElementById('nameInput');
-                const details = document.getElementById('nameDetails');
-                const details_p = details.querySelector('p');
-                const btn = document.getElementById('nameSubmit');
-                const userIdInput = document.getElementById('userIdInput');
-                const userIdSubmit = document.getElementById('userIdSubmit');
-                const userIdCopySubmit = document.getElementById('userIdCopySubmit');
+            const modal = document.getElementById('nameModal');
+            const input = document.getElementById('nameInput');
+            const details = document.getElementById('nameDetails');
+            const details_p = details.querySelector('p');
+            const btn = document.getElementById('nameSubmit');
+            const userIdInput = document.getElementById('userIdInput');
+            const userIdSubmit = document.getElementById('userIdSubmit');
+            const userIdCopySubmit = document.getElementById('userIdCopySubmit');
 
-                userIdCopySubmit.onclick = () => {
-                    const uid = getUserId();
-                    navigator.clipboard.writeText(uid).then(() => {
-                        alert(`ユーザーID「${uid}」をコピーしました！\n（このIDでログインできます）`);
-                    }).catch(() => {
-                        alert('ユーザーIDのコピーに失敗しました。手動でコピーしてください: ' + uid);
-                    });
-                };
+            userIdCopySubmit.onclick = () => {
+                const uid = getUserId();
+                navigator.clipboard.writeText(uid).then(() => {
+                    alert(`ユーザーID「${uid}」をコピーしました！\n（このIDでログインできます）`);
+                }).catch(() => {
+                    alert('ユーザーIDのコピーに失敗しました。手動でコピーしてください: ' + uid);
+                });
+            };
 
-                input.value = userName || '';
-                modal.style.display = 'flex';
-                
-                details_p.textContent = userName ? `現在のユーザーID: ${getUserId()}` : 'ユーザーIDをお持ちの方は、こちらからログインできます';
+            input.value = userName || '';
+            modal.style.display = 'flex';
+            details_p.textContent = userName ? `現在のユーザーID: ${getUserId()}` : 'ユーザーIDをお持ちの方は、こちらからログインできます';
 
-                // モーダルを閉じられないようにEscキーや背景クリックを無効化
-                btn.onclick = async () => {
-                    const newName = input.value.trim();
-                    if (newName === '') {
-                        alert('名前を入力してください');
-                        return;
+            btn.onclick = async () => {
+                const newName = input.value.trim();
+                if (newName === '') {
+                    alert('名前を入力してください');
+                    return;
+                }
+                const success = await changeUserName(newName);
+                if (success) {
+                    modal.style.display = 'none';
+                    if(localStorage.getItem('quizUserId') && localStorage.getItem('quizUserName')) {
+                        createQuizBtn.style.display = 'flex';
                     }
-                    const success = await changeUserName(newName);
-                    if (success) {
-                        modal.style.display = 'none';
-                        resolve(userName);
-                    }
-                };
+                    resolve(userName);
+                }
+            };
 
-                //IDログイン
-                userIdSubmit.onclick = async () => {
-                    const enteredId = userIdInput.value.trim();
-                    if (enteredId === '') {
-                        alert('ユーザーIDを入力してください');
-                        return;
+            userIdSubmit.onclick = async () => {
+                const enteredId = userIdInput.value.trim();
+                if (enteredId === '') {
+                    alert('ユーザーIDを入力してください');
+                    return;
+                }
+                try {
+                    showLoading();
+                    const USER_API = 'https://belmond-fansite.vercel.app/api/userApi';
+                    const res = await fetch(`${USER_API}?userId=${enteredId}&userIdLogin=true`);
+                    if (!res.ok) {
+                        if(res.status === 400) throw new Error("ユーザーIDが見つかりませんでした");
+                        throw new Error('ユーザー情報の取得に失敗しました');
                     }
-                    // IDが一致すれば、名前を取得して表示
-                    try {
-                        showLoading();
-                        const USER_API = 'https://belmond-fansite.vercel.app/api/userApi';
-                        const res = await fetch(`${USER_API}?userId=${enteredId}&userIdLogin=true`);
-                        if (!res.ok)
-                        {
-                            if(res.status === 400) {
-                                const errorData = await res.json();
-                                throw new Error("ユーザーIDが見つかりませんでした");
-                            }
-                            throw new Error('ユーザー情報の取得に失敗しました');
-                        }
-                        const data = await res.json();
-                        userName = data.name;
-                        userId = data.userId
-                        localStorage.setItem('quizUserName', userName);
-                        localStorage.setItem('quizUserId', userId);
-                        updateUserDisplay();
-                        modal.style.display = 'none';
-                        resolve(userName);
-                    } catch (e) {
-                        console.error(e);
-                        alert(e.message || 'ユーザー情報の取得に失敗しました');
+                    const data = await res.json();
+                    userName = data.name;
+                    userId = data.userId;
+                    localStorage.setItem('quizUserName', userName);
+                    localStorage.setItem('quizUserId', userId);
+                    updateUserDisplay();
+                    modal.style.display = 'none';
+                    if(localStorage.getItem('quizUserId') && localStorage.getItem('quizUserName')) {
+                        createQuizBtn.style.display = 'flex';
                     }
+                    resolve(userName);
+                } catch (e) {
+                    alert(e.message || 'ユーザー情報の取得に失敗しました');
+                } finally {
                     hideLoading();
-                };
+                }
+            };
 
-
-
-                // モーダル外クリックやEscキーで閉じられないようにする
-                modal.onclick = (e) => {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                        resolve(userName);
-                    }
-                };
-            });
-        }
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    resolve(userName);
+                }
+            };
+        });
+    }
 
     let selectedCount = 0, questions = [], currentQuestionIndex = 0, userAnswers = [], currentScore = 0;
 
@@ -625,28 +808,48 @@
     const submitOverlay = document.getElementById('submitOverlay');
     const changeNameHeaderBtn = document.getElementById('changeNameHeaderBtn');
 
-    // ユーティリティ
-function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
-function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
-    // Header scroll（index.htmlと同じ）
+    // クイズ作成関連DOM
+    const createQuizBtn = document.getElementById('createQuizBtn');
+    const createQuizBoard = document.getElementById('createQuizBoard');
+    const backFromCreateBtn = document.getElementById('backFromCreateBtn');
+    const quizSearchInput = document.getElementById('quizSearchInput');
+    const myQuizzesOnly = document.getElementById('myQuizzesOnly');
+    const quizzesTableBody = document.getElementById('quizzesTableBody');
+    const quizzesCardView = document.getElementById('quizzesCardView');
+    const pagingControls = document.getElementById('pagingControls');
+    const newQuestionText = document.getElementById('newQuestionText');
+    const newDifficulty = document.getElementById('newDifficulty');
+    const newExplanation = document.getElementById('newExplanation');
+    const answersContainer = document.getElementById('answersContainer');
+    const addAnswerBtn = document.getElementById('addAnswerBtn');
+    const createQuizSubmitBtn = document.getElementById('createQuizSubmitBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const editIdDisplay = document.getElementById('editIdDisplay');
+    const editingIdSpan = document.getElementById('editingIdSpan');
+
+    let formAnswers = [];
+    let formCorrectIndex = -1;
+    let currentPage = 1;
+    let currentSearch = '';
+    let currentMyOnly = false;
+    let totalPages = 1;
+    let editingId = null;
+    let currentQuizzesData = [];
+
+    function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
     window.addEventListener('scroll', () => {
         document.getElementById('site-header').classList.toggle('scrolled', window.scrollY > 50);
     });
 
-    // スマホ・縦長時のフォント自動調整（index.htmlと同じ計算）
     let siteTitle = document.querySelector('.site-title');
     let siteStartFontSize = parseFloat(getComputedStyle(siteTitle).fontSize);
-    let startFontSize = parseFloat(getComputedStyle(siteTitle).fontSize);
     window.addEventListener('resize', () => {
         const windowWidth = window.innerWidth;
-        if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
-        {
-            siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
-        }
-        else
-        {
-            siteTitle.style.fontSize = `${siteStartFontSize}px`;
-        }
+        siteTitle.style.fontSize = (windowWidth < window.screen.width * 0.3 || windowWidth < 400)
+            ? `${siteStartFontSize * 0.5}px`
+            : `${siteStartFontSize}px`;
     });
 
     changeNameHeaderBtn.addEventListener('click', () => getUserName(true));
@@ -786,8 +989,6 @@ function hideLoading() { document.getElementById('loadingOverlay').style.display
         });
 
         await renderResultRanking(currentScore, false);
-
-        // 結果画面で2つのボタンを表示
         againBtn.style.display = 'block';
         backToMenuBtn.style.display = 'block';
     }
@@ -857,9 +1058,7 @@ function hideLoading() { document.getElementById('loadingOverlay').style.display
     }
 
     submitRankingBtn.addEventListener('click', handleSubmitRanking);
-
     againBtn.addEventListener('click', () => resetToStart());
-
     backToMenuBtn.addEventListener('click', () => resetToStart());
 
     function resetToStart() {
@@ -887,20 +1086,326 @@ function hideLoading() { document.getElementById('loadingOverlay').style.display
         } catch (e) {}
     }
 
+    // ====================== クイズ作成機能 ======================
+    function renderAnswerForm() {
+        answersContainer.innerHTML = `
+            <h4 style="margin-bottom:1rem; color:var(--accent);">選択肢（${formAnswers.length}個 / 最大4）</h4>
+            <div id="dynamicAnswerRows"></div>
+        `;
+        const rowsContainer = document.getElementById('dynamicAnswerRows');
+        let html = '';
+        formAnswers.forEach((text, i) => {
+            const isCorrect = (i === formCorrectIndex);
+            html += `
+            <div class="answer-row">
+                <div style="width:60px; text-align:center;">
+                    <span class="correct-label" style="display:inline-block; padding:4px 12px; border-radius:9999px; font-size:0.9rem; font-weight:bold; background:${isCorrect ? '#4CAF50' : '#F44336'}; color:#fff;">
+                        ${isCorrect ? '正解' : '不正解'}
+                    </span>
+                </div>
+                <input type="radio" name="formCorrect" value="${i}" ${i === formCorrectIndex ? 'checked' : ''} style="accent-color:var(--accent); width:22px; height:22px;">
+                <input type="text" class="answer-text-input" data-index="${i}" value="${text}" placeholder="選択肢 ${i+1}">
+                ${formAnswers.length > 2 ? `<button type="button" class="del-answer-btn" data-index="${i}">×</button>` : ''}
+            </div>`;
+        });
+        rowsContainer.innerHTML = html;
+    }
+
+    function resetCreateForm() {
+        editingId = null;
+        editIdDisplay.style.display = 'none';
+        createQuizSubmitBtn.textContent = 'このクイズを登録する 🏆';
+        createQuizSubmitBtn.style.background = 'linear-gradient(90deg, #683D46, #A8758A)';
+        cancelEditBtn.style.display = 'none';
+        formAnswers = ['', ''];
+        formCorrectIndex = 0;
+        newQuestionText.value = '';
+        newExplanation.value = '';
+        newDifficulty.value = 'medium';
+        renderAnswerForm();
+    }
+
+    async function loadQuizzes(page = 1) {
+        currentPage = page;
+        showLoading();
+        try {
+            const url = `${API_BASE}?method=getQuizzes&page=${page}&limit=20&search=${encodeURIComponent(currentSearch)}&myOnly=${currentMyOnly}&userId=${getUserId()}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            currentQuizzesData = data.quizzes;
+
+            const uid = getUserId();
+
+            // テーブル
+            quizzesTableBody.innerHTML = '';
+            data.quizzes.forEach(q => {
+                const isOwn = q.authorID === uid;
+                const row = document.createElement('tr');
+                if (isOwn) row.classList.add('own-quiz');
+                row.innerHTML = `
+                    <td>${q.id}</td>
+                    <td class="question-cell">${q.questionText}</td>
+                    <td style="text-align:center;">
+                        <span style="background:${q.difficulty==='easy'?'#4CAF50':q.difficulty==='medium'?'#FF9800':'#F44336'};color:#fff;padding:4px 12px;border-radius:9999px;font-size:0.85rem;">${q.difficulty}</span>
+                    </td>
+                    <td style="text-align:center;">${q.answers.length}</td>
+                    <td style="text-align:center;">${q.correctRate || 0}%</td>
+                    <td style="text-align:center;">
+                        ${isOwn ? `
+                            <button class="edit-quiz-btn" data-id="${q.id}">編集</button>
+                            <button class="delete-quiz-btn" data-id="${q.id}">削除</button>
+                        ` : ''}
+                    </td>
+                `;
+                quizzesTableBody.appendChild(row);
+            });
+            if (data.quizzes.length === 0) {
+                quizzesTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--accent);">該当クイズがありません</td></tr>`;
+            }
+
+            // スマホカード
+            quizzesCardView.innerHTML = '';
+            data.quizzes.forEach(q => {
+                const isOwn = q.authorID === uid;
+                const card = document.createElement('div');
+                card.className = `QuizCard ${isOwn ? 'own-quiz' : ''}`;
+                card.innerHTML = `
+                    <div class="QuizCard-header">
+                        <div>
+                            <span class="QuizCard-id">#${q.id}</span>
+                            <span class="QuizCard-difficulty" style="background:${q.difficulty==='easy'?'#4CAF50':q.difficulty==='medium'?'#FF9800':'#F44336'}">${q.difficulty}</span>
+                        </div>
+                        ${isOwn ? `
+                        <div class="QuizCard-buttons">
+                            <button class="edit-quiz-btn" data-id="${q.id}">編集</button>
+                            <button class="delete-quiz-btn" data-id="${q.id}">削除</button>
+                        </div>` : ''}
+                    </div>
+                    <p class="QuizCard-question">${q.questionText}</p>
+                    <div class="QuizCard-meta">
+                        <div>選択肢 ${q.answers.length}個</div>
+                        <div>正解率 ${q.correctRate || 0}%</div>
+                    </div>
+                `;
+                quizzesCardView.appendChild(card);
+            });
+
+            totalPages = data.totalPages || 1;
+            pagingControls.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap;">
+                    <button id="quizPrevBtn" class="StartBtn" style="padding:0.7rem 1.4rem; ${currentPage<=1?'opacity:0.4;pointer-events:none;':''}">◀ 前へ</button>
+                    <span style="font-size:1.15rem; color:var(--accent);">ページ ${currentPage} / ${totalPages}（全${data.total}件）</span>
+                    <button id="quizNextBtn" class="StartBtn" style="padding:0.7rem 1.4rem; ${currentPage>=totalPages?'opacity:0.4;pointer-events:none;':''}">次へ ▶</button>
+                </div>
+            `;
+            const prevBtn = document.getElementById('quizPrevBtn');
+            const nextBtn = document.getElementById('quizNextBtn');
+            if (prevBtn) prevBtn.onclick = () => { if (currentPage > 1) loadQuizzes(currentPage - 1); };
+            if (nextBtn) nextBtn.onclick = () => { if (currentPage < totalPages) loadQuizzes(currentPage + 1); };
+        } catch (e) {
+            console.error(e);
+            alert('クイズ一覧の取得に失敗しました…');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function attachOperationListeners() {
+        const board = document.getElementById('createQuizBoard');
+        board.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-quiz-btn')) {
+                const id = parseInt(e.target.dataset.id);
+                if (!confirm(`ID:${id} のクイズを削除しますか？\nこの操作は取り消せません`)) return;
+                showLoading();
+                try {
+                    const res = await fetch(`${API_BASE}?method=deleteQuiz`, {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ id, userId: getUserId() })
+                    });
+                    if (res.ok) {
+                        alert('削除しました');
+                        loadQuizzes(currentPage);
+                    }
+                } catch {
+                    alert('削除に失敗しました');
+                } finally { hideLoading(); }
+            }
+
+            if (e.target.classList.contains('edit-quiz-btn')) {
+                const id = parseInt(e.target.dataset.id);
+                const quiz = currentQuizzesData.find(q => q.id === id);
+                if (!quiz) return;
+
+                if (!confirm(`ID:${id} のクイズを編集しますか？\n問題文：${quiz.questionText}`)) return;
+
+                editingId = id;
+                newQuestionText.value = quiz.questionText;
+                newDifficulty.value = quiz.difficulty;
+                newExplanation.value = quiz.explanation;
+                formAnswers = [...quiz.answers];
+                formCorrectIndex = quiz.correctIndex;
+
+                editIdDisplay.style.display = 'block';
+                editingIdSpan.textContent = id;
+                cancelEditBtn.style.display = 'inline-block';
+                createQuizSubmitBtn.textContent = 'このクイズを更新する 🏆';
+                createQuizSubmitBtn.style.background = 'linear-gradient(90deg, #FF9800, #A8758A)';
+
+                renderAnswerForm();
+            }
+        });
+    }
+
+    function initCreateQuizListeners() {
+        let debounceTimer = null;
+        const doSearch = () => {
+            currentSearch = quizSearchInput.value.trim();
+            currentMyOnly = myQuizzesOnly.checked;
+            currentPage = 1;
+            loadQuizzes(1);
+        };
+        quizSearchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(doSearch, 500);
+        });
+        myQuizzesOnly.addEventListener('change', doSearch);
+
+        addAnswerBtn.addEventListener('click', () => {
+            if (formAnswers.length < 4) {
+                formAnswers.push('');
+                renderAnswerForm();
+            } else {
+                alert('選択肢は最大4個までです');
+            }
+        });
+
+        answersContainer.addEventListener('change', (e) => {
+            if (e.target.name === 'formCorrect') {
+                formCorrectIndex = parseInt(e.target.value);
+                renderAnswerForm();   // 正解／不正解ラベルを即時更新
+            }
+        });
+        answersContainer.addEventListener('input', (e) => {
+            if (e.target.classList.contains('answer-text-input')) {
+                const idx = parseInt(e.target.dataset.index);
+                if (!isNaN(idx)) formAnswers[idx] = e.target.value;
+            }
+        });
+        answersContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('del-answer-btn')) {
+                const idx = parseInt(e.target.dataset.index);
+                if (!isNaN(idx) && formAnswers.length > 2) {
+                    formAnswers.splice(idx, 1);
+                    if (formCorrectIndex === idx) formCorrectIndex = 0;
+                    else if (formCorrectIndex > idx) formCorrectIndex--;
+                    renderAnswerForm();
+                }
+            }
+        });
+
+        createQuizSubmitBtn.addEventListener('click', async () => {
+            const qText = newQuestionText.value.trim();
+            const expl = newExplanation.value.trim();
+
+            if (!qText) return alert('問題文を入力してください');
+            if (formAnswers.length < 2 || formAnswers.length > 4) return alert('選択肢は2〜4個にしてください');
+            if (formCorrectIndex < 0) return alert('正解の選択肢を選んでください');
+            if (formAnswers.some(a => !a.trim())) return alert('空の選択肢があります');
+
+            // 【重要】編集モードなのに id が無い場合は強制的に新規作成にフォールバック + アラート
+            if (editingId === null || editingId === undefined) {
+                if (!confirm('編集モードが正しく認識されていません。新規作成として登録しますか？')) {
+                    return;
+                }
+            }
+
+            showLoading();
+            try {
+                const body = {
+                    id: editingId,                    // nullでもそのまま送信（サーバーで判定）
+                    questionText: qText,
+                    answers: formAnswers.map(a => a.trim()),
+                    correctIndex: Number(formCorrectIndex),   // 必ず数値
+                    difficulty: newDifficulty.value,
+                    explanation: expl,
+                    authorID: getUserId()
+                };
+
+                const method = (editingId !== null && editingId !== undefined) ? 'updateQuiz' : 'createQuiz';
+
+                const res = await fetch(`${API_BASE}?method=${method}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${res.status}`);
+                }
+
+                const result = await res.json();
+
+                if (method === 'updateQuiz') {
+                    alert(`ID:${editingId} のクイズを更新しました！`);
+                } else {
+                    alert(`クイズを作成しました！\nID: ${result.id}`);
+                }
+
+                editingId = null;
+                editIdDisplay.style.display = 'none';
+                cancelEditBtn.style.display = 'none';
+                createQuizSubmitBtn.textContent = 'このクイズを登録する 🏆';
+                createQuizSubmitBtn.style.background = 'linear-gradient(90deg, #683D46, #A8758A)';
+
+                resetCreateForm();
+                loadQuizzes(currentPage);
+            } catch (e) {
+                console.error(e);
+                alert(e.message || '登録／更新に失敗しました…');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+            if (confirm('編集をキャンセルして新規作成に戻りますか？')) {
+                resetCreateForm();
+            }
+        });
+    }
+
+    createQuizBtn.addEventListener('click', async () => {
+        getUserId();
+        await getUserName();
+        updateUserDisplay();
+        startScreen.style.display = 'none';
+        createQuizBoard.style.display = 'block';
+        resetCreateForm();
+        loadQuizzes(1);
+    });
+
+    backFromCreateBtn.addEventListener('click', () => {
+        createQuizBoard.style.display = 'none';
+        startScreen.style.display = 'block';
+    });
 
     window.addEventListener('load', () => {
-    const windowWidth = window.innerWidth;
-    if(windowWidth < window.screen.width * 0.3 || windowWidth < 400)
-    {
-        siteTitle.style.fontSize = `${siteStartFontSize * 0.5}px`;
-    }
-    else
-    {
-        siteTitle.style.fontSize = `${siteStartFontSize}px`;
-    }
-});
-    // 初期表示
-    updateUserDisplay();
+        const windowWidth = window.innerWidth;
+        siteTitle.style.fontSize = (windowWidth < window.screen.width * 0.3 || windowWidth < 400)
+            ? `${siteStartFontSize * 0.5}px`
+            : `${siteStartFontSize}px`;
+
+        updateUserDisplay();
+        attachOperationListeners();
+        initCreateQuizListeners();
+
+        if(localStorage.getItem('quizUserId') && localStorage.getItem('quizUserName')) {
+            createQuizBtn.style.display = 'flex';
+        }
+    });
 </script>
 </body>
 </html>
+</DOCUMENT>
