@@ -1,5 +1,4 @@
-
-// pages/api/quizAPI.js （Vercel用・完全修正版＋クイズ作成機能追加）
+// pages/api/quizAPI.js （Vercel用・完全修正版＋クイズ作成／編集機能）
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.DB_COUNT;
@@ -35,9 +34,9 @@ export default async function handler(req, res) {
         switch (method) {
             case 'registerUser':
                 const { userId: regId } = req.body;
-                const users = db.collection('users');
-                if (!(await users.findOne({ userId: regId }))) {
-                    await users.insertOne({ userId: regId }).catch(() => {});
+                const usersColl = db.collection('users');
+                if (!(await usersColl.findOne({ userId: regId }))) {
+                    await usersColl.insertOne({ userId: regId }).catch(() => {});
                 }
                 return res.status(200).json({ success: true });
 
@@ -56,11 +55,11 @@ export default async function handler(req, res) {
                 return res.status(200).json(data);
 
             case 'submitAnswers':
-                const { answers } = req.body;
+                const { answers: submitAnswersData } = req.body;
                 const qColl = db.collection('questions');
                 let correctCount = 0;
                 const detailedResults = [];
-                for (const ans of answers) {
+                for (const ans of submitAnswersData) {
                     const q = await qColl.findOne({ id: ans.questionId });
                     if (!q) continue;
                     const correct = ans.selected === q.answers[q.correctIndex];
@@ -93,7 +92,7 @@ export default async function handler(req, res) {
                     .toArray();
                 return res.status(200).json(ranking);
 
-            // ====================== 【クイズ管理API】 ======================
+            // ====================== クイズ管理API ======================
             case 'getQuizzes':
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 20;
@@ -131,49 +130,51 @@ export default async function handler(req, res) {
                 });
 
             case 'createQuiz':
-                const { questionText, answers: createAnswers, correctIndex, difficulty, explanation, authorID } = req.body;
+                const { questionText: createQuestionText, answers: createAnswers, correctIndex: createCorrectIndex, difficulty: createDifficulty, explanation: createExplanation, authorID: createAuthorID } = req.body;
 
-                if (!questionText || !Array.isArray(createAnswers) || createAnswers.length < 2 || createAnswers.length > 4 ||
-                    correctIndex === undefined || !['easy','medium','hard'].includes(difficulty) ||
-                    !explanation || !authorID) {
+                if (!createQuestionText || !Array.isArray(createAnswers) || createAnswers.length < 2 || createAnswers.length > 4 ||
+                    createCorrectIndex === undefined || !['easy','medium','hard'].includes(createDifficulty) ||
+                    !createExplanation || !createAuthorID) {
                     return res.status(400).json({ error: '入力データが不正です（選択肢2〜4個、正解選択必須）' });
                 }
 
-                const coll = db.collection('questions');
-                const maxDoc = await coll.findOne({}, { sort: { id: -1 } });
+                const createColl = db.collection('questions');
+                const maxDoc = await createColl.findOne({}, { sort: { id: -1 } });
                 const newId = maxDoc ? maxDoc.id + 1 : 0;
 
                 const newQuiz = {
                     id: newId,
-                    questionText: questionText.trim(),
+                    questionText: createQuestionText.trim(),
                     answers: createAnswers.map(a => a.trim()),
-                    correctIndex: parseInt(correctIndex),
-                    difficulty,
-                    explanation: explanation.trim(),
-                    authorID: authorID,
+                    correctIndex: parseInt(createCorrectIndex),
+                    difficulty: createDifficulty,
+                    explanation: createExplanation.trim(),
+                    authorID: createAuthorID,
                     lastReset: new Date(),
                     attempts: 0,
                     corrects: 0,
                     correctRate: 0
                 };
 
-                await coll.insertOne(newQuiz);
+                await createColl.insertOne(newQuiz);
                 return res.status(200).json({ success: true, id: newId });
 
-            // ====================== 【新規追加】クイズ更新API ======================
             case 'updateQuiz':
-                const { id: updateId, questionText: uText, answers: uAnswers, correctIndex: uCorrect, difficulty: uDiff, explanation: uExpl, authorID: uAuthor } = req.body;
+                const { id: updateId, questionText: updateQuestionText, answers: updateAnswers, correctIndex: updateCorrectIndex, difficulty: updateDifficulty, explanation: updateExplanation, authorID: updateAuthorID } = req.body;
 
-                if (!updateId || !uText || !Array.isArray(uAnswers) || uAnswers.length < 2 || uAnswers.length > 4 ||
-                    uCorrect === undefined || !['easy','medium','hard'].includes(uDiff) ||
-                    !uExpl || !uAuthor) {
-                    return res.status(400).json({ error: '入力データが不正です' });
+                if (!updateId || !updateQuestionText || !Array.isArray(updateAnswers) || updateAnswers.length < 2 || updateAnswers.length > 4 ||
+                    updateCorrectIndex === undefined || !['easy','medium','hard'].includes(updateDifficulty) ||
+                    !updateExplanation || !updateAuthorID) {
+                    return res.status(400).json({ 
+                        error: '入力データが不正です（必須項目が不足または不正）',
+                        receivedKeys: Object.keys(req.body)
+                    });
                 }
 
                 const updateColl = db.collection('questions');
                 const target = await updateColl.findOne({ id: parseInt(updateId) });
 
-                if (!target || target.authorID !== uAuthor) {
+                if (!target || target.authorID !== updateAuthorID) {
                     return res.status(403).json({ error: '編集権限がありません（自分が作成したクイズのみ）' });
                 }
 
@@ -181,11 +182,11 @@ export default async function handler(req, res) {
                     { id: parseInt(updateId) },
                     {
                         $set: {
-                            questionText: uText.trim(),
-                            answers: uAnswers.map(a => a.trim()),
-                            correctIndex: parseInt(uCorrect),
-                            difficulty: uDiff,
-                            explanation: uExpl.trim(),
+                            questionText: updateQuestionText.trim(),
+                            answers: updateAnswers.map(a => a.trim()),
+                            correctIndex: parseInt(updateCorrectIndex),
+                            difficulty: updateDifficulty,
+                            explanation: updateExplanation.trim(),
                             lastReset: new Date()
                         }
                     }
