@@ -160,14 +160,30 @@ export default async function handler(req, res) {
                 return res.status(200).json({ success: true, id: newId });
 
             case 'updateQuiz':
-                const { id: updateId, questionText: updateQuestionText, answers: updateAnswers, correctIndex: updateCorrectIndex, difficulty: updateDifficulty, explanation: updateExplanation, authorID: updateAuthorID } = req.body;
+                const { id: updateId, questionText: updateQuestionText, answers: updateAnswers, 
+                        correctIndex: updateCorrectIndex, difficulty: updateDifficulty, 
+                        explanation: updateExplanation, authorID: updateAuthorID } = req.body;
 
-                if (!updateId || !updateQuestionText || !Array.isArray(updateAnswers) || updateAnswers.length < 2 || updateAnswers.length > 4 ||
-                    updateCorrectIndex === undefined || !['easy','medium','hard'].includes(updateDifficulty) ||
+                // 【修正】id=0の場合も正しく扱う（!updateId ではなく明示的にチェック）
+                if (updateId === undefined || updateId === null || 
+                    !updateQuestionText || 
+                    !Array.isArray(updateAnswers) || updateAnswers.length < 2 || updateAnswers.length > 4 ||
+                    updateCorrectIndex === undefined || updateCorrectIndex === null ||
+                    !['easy','medium','hard'].includes(updateDifficulty) ||
                     !updateExplanation || !updateAuthorID) {
+
                     return res.status(400).json({ 
                         error: '入力データが不正です（必須項目が不足または不正）',
-                        receivedKeys: Object.keys(req.body)
+                        received: {
+                            id: updateId,
+                            questionText: !!updateQuestionText,
+                            answersLength: updateAnswers?.length,
+                            correctIndex: updateCorrectIndex,
+                            difficulty: updateDifficulty,
+                            explanation: !!updateExplanation,
+                            authorID: !!updateAuthorID
+                        },
+                        note: "id=0は正常な値です。!updateId ではなく明示的なチェックを使用"
                     });
                 }
 
