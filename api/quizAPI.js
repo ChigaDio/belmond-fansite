@@ -1,3 +1,5 @@
+
+// pages/api/quizAPI.js （Vercel用・完全修正版＋クイズ作成機能追加）
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.DB_COUNT;
@@ -54,11 +56,11 @@ export default async function handler(req, res) {
                 return res.status(200).json(data);
 
             case 'submitAnswers':
-                const { answers: userAnswers } = req.body;
+                const { answers } = req.body;
                 const qColl = db.collection('questions');
                 let correctCount = 0;
                 const detailedResults = [];
-                for (const ans of userAnswers) {
+                for (const ans of answers) {
                     const q = await qColl.findOne({ id: ans.questionId });
                     if (!q) continue;
                     const correct = ans.selected === q.answers[q.correctIndex];
@@ -91,7 +93,7 @@ export default async function handler(req, res) {
                     .toArray();
                 return res.status(200).json(ranking);
 
-            // ====================== 【新規追加】クイズ作成・管理API ======================
+            // ====================== 【クイズ管理API】 ======================
             case 'getQuizzes':
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 20;
@@ -103,9 +105,7 @@ export default async function handler(req, res) {
                 const quizColl = db.collection('questions');
 
                 let filter = {};
-                if (myOnly && uid) {
-                    filter.authorID = uid;
-                }
+                if (myOnly && uid) filter.authorID = uid;
                 if (search) {
                     const words = search.split(/\s+/).filter(w => w.length > 0);
                     if (words.length > 0) {
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
 
                 const totalCount = await quizColl.countDocuments(filter);
                 const quizzes = await quizColl.find(filter)
-                    .sort({ id: -1 }) // 新しい順
+                    .sort({ id: -1 })
                     .skip(skip)
                     .limit(limit)
                     .toArray();
@@ -131,23 +131,22 @@ export default async function handler(req, res) {
                 });
 
             case 'createQuiz':
-                const { questionText, answers, correctIndex, difficulty, explanation, authorID } = req.body;
+                const { questionText, answers: createAnswers, correctIndex, difficulty, explanation, authorID } = req.body;
 
-                if (!questionText || !Array.isArray(answers) || answers.length < 2 || answers.length > 4 ||
+                if (!questionText || !Array.isArray(createAnswers) || createAnswers.length < 2 || createAnswers.length > 4 ||
                     correctIndex === undefined || !['easy','medium','hard'].includes(difficulty) ||
                     !explanation || !authorID) {
                     return res.status(400).json({ error: '入力データが不正です（選択肢2〜4個、正解選択必須）' });
                 }
 
                 const coll = db.collection('questions');
-                // 最大IDを取得してインクリメント
                 const maxDoc = await coll.findOne({}, { sort: { id: -1 } });
                 const newId = maxDoc ? maxDoc.id + 1 : 0;
 
                 const newQuiz = {
                     id: newId,
                     questionText: questionText.trim(),
-                    answers: answers.map(a => a.trim()),
+                    answers: createAnswers.map(a => a.trim()),
                     correctIndex: parseInt(correctIndex),
                     difficulty,
                     explanation: explanation.trim(),
@@ -161,6 +160,39 @@ export default async function handler(req, res) {
                 await coll.insertOne(newQuiz);
                 return res.status(200).json({ success: true, id: newId });
 
+            // ====================== 【新規追加】クイズ更新API ======================
+            case 'updateQuiz':
+                const { id: updateId, questionText: uText, answers: uAnswers, correctIndex: uCorrect, difficulty: uDiff, explanation: uExpl, authorID: uAuthor } = req.body;
+
+                if (!updateId || !uText || !Array.isArray(uAnswers) || uAnswers.length < 2 || uAnswers.length > 4 ||
+                    uCorrect === undefined || !['easy','medium','hard'].includes(uDiff) ||
+                    !uExpl || !uAuthor) {
+                    return res.status(400).json({ error: '入力データが不正です' });
+                }
+
+                const updateColl = db.collection('questions');
+                const target = await updateColl.findOne({ id: parseInt(updateId) });
+
+                if (!target || target.authorID !== uAuthor) {
+                    return res.status(403).json({ error: '編集権限がありません（自分が作成したクイズのみ）' });
+                }
+
+                await updateColl.updateOne(
+                    { id: parseInt(updateId) },
+                    {
+                        $set: {
+                            questionText: uText.trim(),
+                            answers: uAnswers.map(a => a.trim()),
+                            correctIndex: parseInt(uCorrect),
+                            difficulty: uDiff,
+                            explanation: uExpl.trim(),
+                            lastReset: new Date()
+                        }
+                    }
+                );
+
+                return res.status(200).json({ success: true, id: parseInt(updateId) });
+
             case 'deleteQuiz':
                 const { id: delId, userId: delUserId } = req.body;
                 if (!delId || !delUserId) return res.status(400).json({ error: 'IDとユーザーIDが必要です' });
@@ -168,7 +200,6 @@ export default async function handler(req, res) {
                 const delColl = db.collection('questions');
                 const targetQuiz = await delColl.findOne({ id: parseInt(delId) });
 
-                // 自分が作成したもののみ削除可能
                 if (!targetQuiz || targetQuiz.authorID !== delUserId) {
                     return res.status(403).json({ error: '削除権限がありません（自分が作成したクイズのみ）' });
                 }
