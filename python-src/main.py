@@ -128,15 +128,6 @@ def load_from_mongodb(
             actual_start_time=doc.get("actual_start_time"),
             actual_end_time=doc.get("actual_end_time"),
             concurrent_viewers=doc.get("concurrent_viewers", 0),
-
-            # 分析フィールド
-            is_holiday=doc.get("is_holiday", False),
-            weekday=weekday,
-            consecutive_broadcast_days=doc.get("consecutive_broadcast_days", 1),
-            same_day_broadcast_count=doc.get("same_day_broadcast_count", 1),
-            days_since_last_broadcast=doc.get("days_since_last_broadcast", 0),
-            was_broadcast_yesterday=doc.get("was_broadcast_yesterday", False),
-
             # Enum
             content_category=content_cat
         )
@@ -233,12 +224,6 @@ def save_to_mongodb(
                 "duration_sec": video.duration_sec if video.duration_sec is not None else 0.0,
                 "url": video.url,
                 "content_category": video.content_category.value if video.content_category else "unknown",
-                "is_holiday": video.is_holiday,
-                "weekday": video.weekday.value if video.weekday else None,
-                "consecutive_broadcast_days": video.consecutive_broadcast_days,
-                "same_day_broadcast_count": video.same_day_broadcast_count,
-                "days_since_last_broadcast": video.days_since_last_broadcast,
-                "was_broadcast_yesterday": video.was_broadcast_yesterday,
                 "live_status": video.live_status,
                 "is_live_now": video.is_live_now,
                 "concurrent_viewers": video.concurrent_viewers if video.concurrent_viewers is not None else 0,
@@ -260,12 +245,6 @@ def save_to_mongodb(
                 "duration_sec": video.duration_sec if video.duration_sec is not None else 0.0,
                 "url": video.url,
                 "content_category": video.content_category.value if video.content_category else "unknown",
-                "is_holiday": video.is_holiday,
-                "weekday": video.weekday.value if video.weekday else None,
-                "consecutive_broadcast_days": video.consecutive_broadcast_days,
-                "same_day_broadcast_count": video.same_day_broadcast_count,
-                "days_since_last_broadcast": video.days_since_last_broadcast,
-                "was_broadcast_yesterday": video.was_broadcast_yesterday,
                 "live_status": video.live_status,
                 "is_live_now": video.is_live_now,
                 "concurrent_viewers": video.concurrent_viewers if video.concurrent_viewers is not None else 0,

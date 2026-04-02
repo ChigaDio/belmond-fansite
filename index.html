@@ -324,6 +324,7 @@
             cursor: pointer;
             z-index: 10;
             text-shadow: 0 0 8px black;
+            overflow: visible;
         }
         .video-player {
             position: relative;
@@ -590,8 +591,8 @@
 </div>
 <!-- 動画再生モーダル -->
 <div id="videoModal">
+    <span class="close-btn" id="closeModal">&times;</span>
     <div class="modal-content">
-        <span class="close-btn" id="closeModal">&times;</span>
         <div class="video-player" id="playerContainer"></div>
     </div>
 </div>
@@ -749,15 +750,15 @@ function openVideoModal(videoId, title) {
     const modal = document.getElementById('videoModal');
     const container = document.getElementById('playerContainer');
 
-    container.innerHTML = `
-        <iframe 
-            src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
-            title="${title.replace(/"/g, '&quot;')}" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-        </iframe>
-    `;
+container.innerHTML = `
+    <iframe 
+        src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&controls=1&fs=1&modestbranding=1" 
+        title="${title.replace(/"/g, '&quot;')}" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+        allowfullscreen>
+    </iframe>
+`;
 
     modal.style.display = 'flex';
 }
