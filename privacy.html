@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー | Belmond Fansite</title>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Opti:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #683D46; --primary-dark: #4A2B32; --accent: #A8758A;
+            --light-accent: #C9A8B5; --bg-dark: #140B0F; --bg-mid: #25161C;
+            --text-main: #F0E8FF; --text-sub: #D4C8D0;
+        }
+        body { font-family: "Kaisei Opti", serif; background: var(--bg-dark); color: var(--text-main); line-height: 1.8; padding-top: 100px; }
+        header { position: fixed; top: 0; left: 0; width: 100%; background: rgba(104,61,70,0.88); backdrop-filter: blur(8px); z-index: 1000; }
+        .inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem; height: 80px; display: flex; align-items: center; justify-content: space-between; }
+        .site-title { font-size: 1.9rem; font-weight: 700; color: var(--light-accent); }
+        main { max-width: 1000px; margin: 0 auto; padding: 2rem; background: var(--bg-mid); border-radius: 12px; }
+        h1 { color: var(--light-accent); text-align: center; margin-bottom: 2rem; }
+        footer { text-align: center; padding: 4rem 2rem; font-size: 0.95rem; color: var(--accent); opacity: 0.7; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="inner">
+        <div class="site-title">Belmond(非公式:ファンサイト)</div>
+    </div>
+</header>
+
+<main>
+    <h1>プライバシーポリシー</h1>
+    <p>最終更新日：2026年4月3日</p>
+
+    <h2>1. 本サイトについて</h2>
+    <p>本サイト（https://belmond-fansite.vercel.app）は、にじさんじ所属VTuber「ベルモンド・バンデラス」さんの非公式ファンサイトです。</p>
+
+    <h2>2. YouTube APIの使用について</h2>
+    <p>本サイトは<strong>YouTube Data API v3</strong>を使用しています。<br>
+    ユーザーが本サイトを利用することにより、<a href="https://www.youtube.com/t/terms" target="_blank">YouTube利用規約</a>に同意したものとみなされます。</p>
+
+    <h2>3. 取得・保存する情報</h2>
+    <ul>
+        <li>公開動画情報（タイトル、視聴回数、いいね数、コメント数、公開日時など）</li>
+        <li>チャンネル公開情報（登録者数）</li>
+        <li>再生リスト情報</li>
+    </ul>
+    <p>※ 個人情報、視聴履歴、コメント、プライベートデータは一切取得・保存しません。</p>
+
+    <h2>4. ユーザー情報（localStorage）</h2>
+    <p>クイズ機能で使用する「ユーザー名」と「ユーザーID」をブラウザのlocalStorageに保存します。これらは本サイト内でのみ使用され、外部に送信・共有されることはありません。</p>
+
+    <h2>5. データの保存先</h2>
+    <p>取得したYouTube公開データはMongoDB Atlas（クラウドデータベース）に一時保存されます。データは毎日自動更新され、古いデータは自動削除されます。</p>
+
+    <h2>6. 第三者への共有</h2>
+    <p>取得したデータを広告・営利目的で第三者に提供することは一切ありません。</p>
+
+    <h2>7. Googleプライバシーポリシー</h2>
+    <p>本サイトはGoogleのサービス（YouTube API）を利用しているため、<a href="https://www.google.com/policies/privacy/" target="_blank">Googleプライバシーポリシー</a>も適用されます。</p>
+
+    <h2>8. お問い合わせ</h2>
+    <p>プライバシーポリシーに関するお問い合わせは、以下のXにDMまでご連絡ください。<br>
+    <strong>📧<a href="https://x.com/w73KFSEsCh70014" target="_blank">コア (@w73KFSEsCh70014)</a></strong></p>
+</main>
+
+<footer>
+    <p>© 2026 Belmond Fansite (非公式)</p>
+    <p><a href="./terms.html" style="color:var(--accent);">利用規約</a> | <a href="./index.html" style="color:var(--accent);">ホームに戻る</a></p>
+</footer>
+</body>
+</html>
