@@ -26,6 +26,14 @@ export default async function handler(req, res) {
   const limit = 20;
   const skip = (parseInt(page) - 1) * limit;
 
+  const YOUTUBE_API_KEY = 'AIzaSyCCei86Wkk6Qme7vnbbx7O2P66Kbcr9z_4';
+  const CHANNEL_ID = 'UCbcc8fwhdUNlqi-J99ISYu4A';
+
+    // YouTube fetch（変数名を明確に変更）
+  const youtubeResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=30&type=video&order=date&key=${YOUTUBE_API_KEY}`
+    );
+
   try {
     await client.connect();
     const db = client.db('belmond_fan_data');
