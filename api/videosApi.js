@@ -12,6 +12,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
+  const YOUTUBE_API_KEY = 'AIzaSyCCei86Wkk6Qme7vnbbx7O2P66Kbcr9z_4';
+  const CHANNEL_ID = 'UCbcc8fwhdUNlqi-J99ISYu4A';
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=30&type=video&order=date&key=${YOUTUBE_API_KEY}`
+  );
   const {
     page = 1,
     search = '',
