@@ -1,5 +1,3 @@
-// pages/api/videosDetailsApi.js
-
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.DB;
@@ -12,13 +10,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  const YOUTUBE_API_KEY = 'AIzaSyCCei86Wkk6Qme7vnbbx7O2P66Kbcr9z_4';
-  const CHANNEL_ID = 'UCbcc8fwhdUNlqi-J99ISYu4A';
-  const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=30&type=video&order=date&key=${YOUTUBE_API_KEY}`
-  );
   const {
-    page = 1,
+    page = '1',
     search = '',
     playlists = '',
     startDate = '',
@@ -31,14 +24,26 @@ export default async function handler(req, res) {
   const limit = 20;
   const skip = (parseInt(page) - 1) * limit;
 
+  const YOUTUBE_API_KEY = 'AIzaSyCCei86Wkk6Qme7vnbbx7O2P66Kbcr9z_4';
+  const CHANNEL_ID = 'UCbcc8fwhdUNlqi-J99ISYu4A';
+
   try {
+    // YouTube fetch（変数名を明確に変更）
+    const youtubeResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=30&type=video&order=date&key=${YOUTUBE_API_KEY}`
+    );
+
+    if (!youtubeResponse.ok) {
+      throw new Error(`YouTube API error: ${youtubeResponse.status}`);
+    }
+
     await client.connect();
     const db = client.db('belmond_fan_data');
-    const collection = db.collection('videos');
+    const collection = db.collection('videos');   // ← ここはあなたの動画コレクション名に合わせてください
 
     const filter = {};
 
-    // タイトル検索
+    // タイトル検索（複数キーワード対応）
     if (search) {
       const keywords = search.split(',').map(k => k.trim()).filter(Boolean);
       if (keywords.length > 0) {
@@ -46,19 +51,16 @@ export default async function handler(req, res) {
       }
     }
 
-    // プレイリストフィルタ（デバッグログ追加）
+    // プレイリストフィルタ
     if (playlists) {
       const playlistTitles = playlists.split(',').map(t => decodeURIComponent(t.trim())).filter(Boolean);
-      console.log('Received playlists param:', playlists);               // ← Vercelログで確認用
-      console.log('Decoded playlist titles:', playlistTitles);          
       if (playlistTitles.length > 0) {
         filter.playlist_titles = { $in: playlistTitles };
-        console.log('Applied filter.playlist_titles:', filter.playlist_titles); // フィルタ適用ログ
       }
     }
 
-    // 他のフィルタ（変更なし）
     if (type) filter.type = type;
+
     if (startDate || endDate) {
       filter.published_at = {};
       if (startDate) filter.published_at.$gte = new Date(startDate);
@@ -69,7 +71,11 @@ export default async function handler(req, res) {
     const sort = { [sortBy]: sortDirection };
 
     const totalCount = await collection.countDocuments(filter);
-    const videos = await collection.find(filter).sort(sort).skip(skip).limit(limit).toArray();
+    const videos = await collection.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .toArray();
 
     res.status(200).json({
       videos,
@@ -80,6 +86,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('API Error:', error);
-    res.status(500).json({ error: 'サーバーエラー', details: error.message });
+    res.status(500).json({ 
+      error: 'サーバーエラー', 
+      details: error.message 
+    });
+  } finally {
+    // 接続を閉じる（サーバーレスでは推奨）
+    if (client) await client.close().catch(() => {});
   }
 }
